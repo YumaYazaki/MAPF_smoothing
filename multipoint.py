@@ -48,6 +48,19 @@ class GlobalSmoothingConfig:
 
 
 @dataclass(frozen=True)
+class CurvatureSamplingConfig:
+    """Configuration for full-path curvature sampling.
+
+    Attributes:
+        line_sample_ds: Approximate sampling interval for straight segments.
+        curve_samples_per_corner: Number of samples for each quintic curve.
+    """
+
+    line_sample_ds: float = 0.02
+    curve_samples_per_corner: int = 200
+
+
+@dataclass(frozen=True)
 class QuinticPolynomial1D:
     """Represents a 1D quintic polynomial.
 
@@ -147,6 +160,52 @@ class QuinticCornerCurve:
             _add(_scale(self.e_in, x_local), _scale(self.e_out, y_local)),
         )
 
+    def first_derivative(self, u: float) -> Vector2:
+        """Evaluate the first derivative with respect to u.
+
+        Args:
+            u: Curve parameter in [0, 1].
+
+        Returns:
+            2D derivative vector.
+        """
+        dx = self.x_poly.first_derivative(u)
+        dy = self.y_poly.first_derivative(u)
+        return _add(_scale(self.e_in, dx), _scale(self.e_out, dy))
+
+    def second_derivative(self, u: float) -> Vector2:
+        """Evaluate the second derivative with respect to u.
+
+        Args:
+            u: Curve parameter in [0, 1].
+
+        Returns:
+            2D second derivative vector.
+        """
+        ddx = self.x_poly.second_derivative(u)
+        ddy = self.y_poly.second_derivative(u)
+        return _add(_scale(self.e_in, ddx), _scale(self.e_out, ddy))
+
+    def curvature(self, u: float, eps: float = 1e-12) -> float:
+        """Evaluate curvature kappa(u).
+
+        Args:
+            u: Curve parameter in [0, 1].
+            eps: Small value to avoid division by zero.
+
+        Returns:
+            Curvature at u.
+        """
+        dx, dy = self.first_derivative(u)
+        ddx, ddy = self.second_derivative(u)
+
+        numerator = dx * ddy - dy * ddx
+        denominator = (dx * dx + dy * dy) ** 1.5
+
+        if denominator < eps:
+            return 0.0
+        return numerator / denominator
+
     def sample(self, num_points: int) -> List[Vector2]:
         """Sample points on the curve.
 
@@ -187,6 +246,21 @@ class SmoothedPolylineResult:
     original_points: List[Vector2]
     smoothed_points: List[Vector2]
     corner_results: List[CornerSmoothingResult]
+
+
+@dataclass(frozen=True)
+class PathCurvatureProfile:
+    """Stores full-path sampled geometry and curvature profile.
+
+    Attributes:
+        sampled_points: Sampled points along the whole path.
+        s_values: Cumulative arc length at each sampled point.
+        kappa_values: Curvature at each sampled point.
+    """
+
+    sampled_points: List[Vector2]
+    s_values: List[float]
+    kappa_values: List[float]
 
 
 def smooth_mapf_polyline(
@@ -272,6 +346,86 @@ def smooth_mapf_polyline(
     )
 
 
+def sample_smoothed_polyline_with_curvature(
+    result: SmoothedPolylineResult,
+    sampling_config: CurvatureSamplingConfig,
+) -> PathCurvatureProfile:
+    """Sample the whole smoothed path and compute curvature kappa(s).
+
+    The path is treated as a piecewise curve:
+        - Straight segment pieces with kappa = 0
+        - Quintic corner curve pieces with analytical curvature
+
+    Args:
+        result: Smoothed polyline result.
+        sampling_config: Sampling configuration for straight and curve pieces.
+
+    Returns:
+        Full path curvature profile.
+    """
+    corner_map = {item.corner_index: item for item in result.corner_results}
+    original_points = result.original_points
+    num_points = len(original_points)
+
+    sampled_points: List[Vector2] = []
+    s_values: List[float] = []
+    kappa_values: List[float] = []
+
+    def append_sample(point: Vector2, kappa: float) -> None:
+        """Append one sample while updating cumulative arc length."""
+        if not sampled_points:
+            sampled_points.append(point)
+            s_values.append(0.0)
+            kappa_values.append(kappa)
+            return
+
+        if _points_close(sampled_points[-1], point):
+            if abs(kappa_values[-1]) < abs(kappa):
+                kappa_values[-1] = kappa
+            return
+
+        ds = _distance(sampled_points[-1], point)
+        sampled_points.append(point)
+        s_values.append(s_values[-1] + ds)
+        kappa_values.append(kappa)
+
+    for seg_idx in range(num_points - 1):
+        p_start = original_points[seg_idx]
+        p_end = original_points[seg_idx + 1]
+
+        left_corner = corner_map.get(seg_idx)
+        right_corner = corner_map.get(seg_idx + 1)
+
+        segment_start = left_corner.curve.q_plus if left_corner else p_start
+        segment_end = right_corner.curve.q_minus if right_corner else p_end
+
+        line_length = _distance(segment_start, segment_end)
+        if line_length > 0.0:
+            num_line_samples = max(
+                2,
+                int(math.ceil(line_length / sampling_config.line_sample_ds)) + 1,
+            )
+            line_points = _sample_line(segment_start, segment_end, num_line_samples)
+            for point in line_points:
+                append_sample(point, 0.0)
+
+        if right_corner:
+            curve = right_corner.curve
+            curve_num_samples = max(2, sampling_config.curve_samples_per_corner)
+
+            for idx in range(curve_num_samples):
+                u = idx / (curve_num_samples - 1)
+                point = curve.point(u)
+                kappa = curve.curvature(u)
+                append_sample(point, kappa)
+
+    return PathCurvatureProfile(
+        sampled_points=sampled_points,
+        s_values=s_values,
+        kappa_values=kappa_values,
+    )
+
+
 def plot_smoothed_polyline(result: SmoothedPolylineResult) -> None:
     """Plot original MAPF polyline and smoothed polyline.
 
@@ -304,6 +458,70 @@ def plot_smoothed_polyline(result: SmoothedPolylineResult) -> None:
     plt.ylabel("y")
     plt.title("Whole MAPF polyline smoothing by local quintic curves")
     plt.legend()
+    plt.show()
+
+
+def plot_smoothed_polyline_and_curvature(
+    result: SmoothedPolylineResult,
+    profile: PathCurvatureProfile,
+) -> None:
+    """Plot whole-path geometry and curvature kappa(s).
+
+    Args:
+        result: Smoothed polyline result.
+        profile: Full-path curvature profile.
+    """
+    original_x = [p[0] for p in result.original_points]
+    original_y = [p[1] for p in result.original_points]
+
+    smooth_x = [p[0] for p in profile.sampled_points]
+    smooth_y = [p[1] for p in profile.sampled_points]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    axes[0].plot(smooth_x, smooth_y, label="Smoothed polyline")
+    axes[0].plot(
+        original_x,
+        original_y,
+        "--",
+        color="black",
+        linewidth=1.5,
+        label="Original MAPF",
+    )
+    axes[0].scatter(
+        original_x,
+        original_y,
+        color="black",
+        s=25,
+        label="MAPF points",
+        zorder=5,
+    )
+
+    for corner_result in result.corner_results:
+        q_minus = corner_result.curve.q_minus
+        q_plus = corner_result.curve.q_plus
+        axes[0].scatter(
+            [q_minus[0], q_plus[0]],
+            [q_minus[1], q_plus[1]],
+            marker="x",
+            s=50,
+        )
+
+    axes[0].axis("equal")
+    axes[0].grid(True)
+    axes[0].set_xlabel("x")
+    axes[0].set_ylabel("y")
+    axes[0].set_title("Whole-path geometry")
+    axes[0].legend()
+
+    axes[1].plot(profile.s_values, profile.kappa_values, label="kappa(s)")
+    axes[1].grid(True)
+    axes[1].set_xlabel("Arc length s")
+    axes[1].set_ylabel("Curvature kappa(s)")
+    axes[1].set_title("Curvature along whole smoothed path")
+    axes[1].legend()
+
+    plt.tight_layout()
     plt.show()
 
 
@@ -549,6 +767,29 @@ def _adjust_corner_ds_to_avoid_overlap(
     return adjusted
 
 
+def _sample_line(start: Vector2, end: Vector2, num_points: int) -> List[Vector2]:
+    """Sample a straight line segment.
+
+    Args:
+        start: Start point.
+        end: End point.
+        num_points: Number of samples including endpoints.
+
+    Returns:
+        Sampled line points.
+    """
+    if num_points < 2:
+        raise ValueError("num_points must be at least 2.")
+
+    return [
+        (
+            start[0] + (end[0] - start[0]) * i / (num_points - 1),
+            start[1] + (end[1] - start[1]) * i / (num_points - 1),
+        )
+        for i in range(num_points)
+    ]
+
+
 def _build_local_x_polynomial(d: float, lam: float) -> QuinticPolynomial1D:
     """Build the quintic polynomial for local x(u).
 
@@ -661,7 +902,7 @@ if __name__ == "__main__":
         (7.0, 4.0),
     ]
 
-    config_example = GlobalSmoothingConfig(
+    smoothing_config_example = GlobalSmoothingConfig(
         d_default=0.45,
         rho=1.0,
         corner_angle_threshold_deg=5.0,
@@ -672,7 +913,17 @@ if __name__ == "__main__":
 
     result_example = smooth_mapf_polyline(
         points=mapf_points_example,
-        config=config_example,
+        config=smoothing_config_example,
+    )
+
+    curvature_sampling_config_example = CurvatureSamplingConfig(
+        line_sample_ds=0.02,
+        curve_samples_per_corner=300,
+    )
+
+    profile_example = sample_smoothed_polyline_with_curvature(
+        result=result_example,
+        sampling_config=curvature_sampling_config_example,
     )
 
     print("Number of smoothed corners:", len(result_example.corner_results))
@@ -685,4 +936,7 @@ if __name__ == "__main__":
             f"q_plus={corner_result.curve.q_plus}"
         )
 
-    plot_smoothed_polyline(result_example)
+    plot_smoothed_polyline_and_curvature(
+        result=result_example,
+        profile=profile_example,
+    )
