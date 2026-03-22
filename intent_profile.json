@@ -1,0 +1,94 @@
+{
+    "path_id": "path_001",
+    "path_level_intent": {
+        "global_priority": "high",
+        "energy_mode": "balanced",
+        "stop_policy": "discouraged",
+        "replanning_policy": "allowed_if_infeasible",
+        "intent_confidence": "medium",
+        "validity_horizon": 2.0
+    },
+    "segment_level_intent": [
+        {
+            "segment_id": 0,
+            "segment_type": "straight_like",
+            "constraint_class": "S2",
+            "v_min": 0.4,
+            "v_nominal": 0.8,
+            "v_max": 1.0,
+            "priority_local": "normal",
+            "stop_allowed": true,
+            "dwell_allowed": true,
+            "overtake_forbidden": false,
+            "coordination_region_id": null,
+            "notes": "Approach segment"
+        },
+        {
+            "segment_id": 1,
+            "segment_type": "turning",
+            "constraint_class": "S1",
+            "v_min": 0.2,
+            "v_nominal": 0.45,
+            "v_max": 0.6,
+            "priority_local": "high",
+            "stop_allowed": false,
+            "dwell_allowed": false,
+            "overtake_forbidden": true,
+            "coordination_region_id": "CR_01",
+            "notes": "Do not stop in turning/cooperation zone"
+        },
+        {
+            "segment_id": 2,
+            "segment_type": "straight_like",
+            "constraint_class": "S2",
+            "v_min": 0.4,
+            "v_nominal": 0.8,
+            "v_max": 1.0,
+            "priority_local": "normal",
+            "stop_allowed": true,
+            "dwell_allowed": true,
+            "overtake_forbidden": false,
+            "coordination_region_id": null,
+            "notes": "Exit segment"
+        }
+    ],
+    "event_level_intent": [
+        {
+            "event_id": "ev_001_enter_turn",
+            "path_id": "path_001",
+            "event_type": "enter_checkpoint",
+            "segment_id": 1,
+            "s_event": 1.2,
+            "constraint_class": "S1",
+            "time_window_start": 3.0,
+            "time_window_end": 3.8,
+            "must_pass_before_event_id": null,
+            "must_not_enter_before_time": null,
+            "occupancy_rule": null,
+            "headway_time": null,
+            "penalty_weight": 10.0,
+            "coordination_region_id": "CR_01"
+        },
+        {
+            "event_id": "ev_002_exit_turn",
+            "path_id": "path_001",
+            "event_type": "exit_checkpoint",
+            "segment_id": 1,
+            "s_event": 2.624,
+            "constraint_class": "H",
+            "time_window_start": null,
+            "time_window_end": 4.6,
+            "must_pass_before_event_id": "other_robot_ev_010_enter_CR_01",
+            "must_not_enter_before_time": null,
+            "occupancy_rule": "exclusive",
+            "headway_time": 0.2,
+            "penalty_weight": null,
+            "coordination_region_id": "CR_01"
+        }
+    ],
+    "constraint_class_definition": {
+        "H": "Hard constraint: must be satisfied.",
+        "S1": "Strong soft constraint: should be satisfied unless infeasible.",
+        "S2": "Weak soft constraint: desirable reference intent."
+    }
+}

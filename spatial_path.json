@@ -1,0 +1,203 @@
+{
+    "header": {
+        "path_id": "path_001",
+        "robot_id": "robot_A",
+        "task_id": "task_20260322_001",
+        "version": "1.0",
+        "frame_id": "world",
+        "s_start": 0.0,
+        "s_end": 3.824,
+        "total_length": 3.824,
+        "path_generation_method": "mapf_plus_quintic_local_smoothing"
+    },
+    "geometry_segments": [
+        {
+            "segment_id": 0,
+            "geometry_type": "line",
+            "s_start": 0.0,
+            "s_end": 1.2,
+            "length": 1.2,
+            "prev_segment_id": null,
+            "next_segment_id": 1,
+            "p_start": [
+                -2.0,
+                0.0
+            ],
+            "p_end": [
+                -0.8,
+                0.0
+            ],
+            "tangent": [
+                1.0,
+                0.0
+            ],
+            "curvature": 0.0
+        },
+        {
+            "segment_id": 1,
+            "geometry_type": "quintic_corner",
+            "s_start": 1.2,
+            "s_end": 2.624,
+            "length": 1.424,
+            "prev_segment_id": 0,
+            "next_segment_id": 2,
+            "corner_point": [
+                0.0,
+                0.0
+            ],
+            "q_minus": [
+                -0.8,
+                0.0
+            ],
+            "q_plus": [
+                0.0,
+                0.8
+            ],
+            "e_in": [
+                1.0,
+                0.0
+            ],
+            "e_out": [
+                0.0,
+                1.0
+            ],
+            "d": 0.8,
+            "lam": 1.2,
+            "x_coeffs": [
+                -0.8,
+                1.2,
+                0.0,
+                0.8,
+                -2.4,
+                1.2
+            ],
+            "y_coeffs": [
+                0.0,
+                0.0,
+                0.0,
+                4.8,
+                -7.2,
+                3.2
+            ],
+            "length_L": 1.424,
+            "table_u": [
+                0.0,
+                0.1,
+                0.2,
+                0.3,
+                0.4,
+                0.5,
+                0.6,
+                0.7,
+                0.8,
+                0.9,
+                1.0
+            ],
+            "table_s": [
+                0.0,
+                0.109,
+                0.245,
+                0.418,
+                0.624,
+                0.812,
+                0.992,
+                1.164,
+                1.295,
+                1.375,
+                1.424
+            ],
+            "quadrature_order": 20,
+            "evaluator_type": "hybrid_newton_bisection"
+        },
+        {
+            "segment_id": 2,
+            "geometry_type": "line",
+            "s_start": 2.624,
+            "s_end": 3.824,
+            "length": 1.2,
+            "prev_segment_id": 1,
+            "next_segment_id": null,
+            "p_start": [
+                0.0,
+                0.8
+            ],
+            "p_end": [
+                0.0,
+                2.0
+            ],
+            "tangent": [
+                0.0,
+                1.0
+            ],
+            "curvature": 0.0
+        }
+    ],
+    "path_samples": [
+        {
+            "sample_id": 0,
+            "s": 0.0,
+            "x": -2.0,
+            "y": 0.0,
+            "dx_ds": 1.0,
+            "dy_ds": 0.0,
+            "kappa": 0.0,
+            "segment_id": 0,
+            "geometry_type": "line"
+        },
+        {
+            "sample_id": 1,
+            "s": 0.8,
+            "x": -1.2,
+            "y": 0.0,
+            "dx_ds": 1.0,
+            "dy_ds": 0.0,
+            "kappa": 0.0,
+            "segment_id": 0,
+            "geometry_type": "line"
+        },
+        {
+            "sample_id": 2,
+            "s": 1.2,
+            "x": -0.8,
+            "y": 0.0,
+            "dx_ds": 1.0,
+            "dy_ds": 0.0,
+            "kappa": 0.0,
+            "segment_id": 1,
+            "geometry_type": "quintic_corner"
+        },
+        {
+            "sample_id": 3,
+            "s": 1.9,
+            "x": -0.28,
+            "y": 0.24,
+            "dx_ds": 0.84,
+            "dy_ds": 0.54,
+            "kappa": 1.12,
+            "segment_id": 1,
+            "geometry_type": "quintic_corner"
+        },
+        {
+            "sample_id": 4,
+            "s": 2.624,
+            "x": 0.0,
+            "y": 0.8,
+            "dx_ds": 0.0,
+            "dy_ds": 1.0,
+            "kappa": 0.0,
+            "segment_id": 2,
+            "geometry_type": "line"
+        },
+        {
+            "sample_id": 5,
+            "s": 3.824,
+            "x": 0.0,
+            "y": 2.0,
+            "dx_ds": 0.0,
+            "dy_ds": 1.0,
+            "kappa": 0.0,
+            "segment_id": 2,
+            "geometry_type": "line"
+        }
+    ]
+}
