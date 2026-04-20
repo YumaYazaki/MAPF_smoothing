@@ -1,13 +1,13 @@
 [
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_01",
     "case_name": "Case 01: rotation only",
     "purpose": "回転単体確認",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.006322300003375858,
+    "planning_time_sec": 0.006864099996164441,
     "num_robots": 1,
     "makespan": 2.3,
     "sum_of_costs": 2.3,
@@ -26,46 +26,46 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_01",
     "case_name": "Case 01: rotation only",
     "purpose": "回転単体確認",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.035021300020162016,
+    "planning_time_sec": 0.03713920002337545,
     "num_robots": 1,
-    "makespan": 2.3,
-    "sum_of_costs": 2.3,
+    "makespan": 2.1,
+    "sum_of_costs": 2.1,
     "total_wait": 0,
     "total_move": 0,
-    "total_rotate": 2,
-    "total_move_rotate": 0,
+    "total_rotate": 0,
+    "total_move_rotate": 2,
     "per_robot": {
       "0": {
-        "cost": 2.3,
+        "cost": 2.1,
         "num_states": 3,
         "num_transitions": 2,
         "num_wait": 0,
         "num_move": 0,
-        "num_rotate": 2,
-        "num_move_rotate": 0
+        "num_rotate": 0,
+        "num_move_rotate": 2
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_02",
     "case_name": "Case 02: move+rotate",
     "purpose": "move+rotate 単体効果",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.006422200007364154,
+    "planning_time_sec": 0.00665990001289174,
     "num_robots": 1,
     "makespan": 3.15,
     "sum_of_costs": 3.15,
@@ -84,17 +84,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_02",
     "case_name": "Case 02: move+rotate",
     "purpose": "move+rotate 単体効果",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.03494619997218251,
+    "planning_time_sec": 0.03512249997584149,
     "num_robots": 1,
     "makespan": 2.05,
     "sum_of_costs": 2.05,
@@ -113,17 +113,17 @@
         "num_move_rotate": 1
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_03",
     "case_name": "Case 03: two robot corridor",
     "purpose": "単純な2台対向協調",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.026904999976977706,
+    "planning_time_sec": 0.009172899997793138,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 10.0,
@@ -133,15 +133,6 @@
     "total_move_rotate": 0,
     "per_robot": {
       "0": {
-        "cost": 4.0,
-        "num_states": 5,
-        "num_transitions": 4,
-        "num_wait": 0,
-        "num_move": 4,
-        "num_rotate": 0,
-        "num_move_rotate": 0
-      },
-      "1": {
         "cost": 6.0,
         "num_states": 7,
         "num_transitions": 6,
@@ -149,19 +140,28 @@
         "num_move": 6,
         "num_rotate": 0,
         "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 4.0,
+        "num_states": 5,
+        "num_transitions": 4,
+        "num_wait": 0,
+        "num_move": 4,
+        "num_rotate": 0,
+        "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_03",
     "case_name": "Case 03: two robot corridor",
     "purpose": "単純な2台対向協調",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.18786900001578033,
+    "planning_time_sec": 0.042282800015527755,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 10.0,
@@ -171,15 +171,6 @@
     "total_move_rotate": 0,
     "per_robot": {
       "0": {
-        "cost": 4.0,
-        "num_states": 5,
-        "num_transitions": 4,
-        "num_wait": 0,
-        "num_move": 4,
-        "num_rotate": 0,
-        "num_move_rotate": 0
-      },
-      "1": {
         "cost": 6.0,
         "num_states": 7,
         "num_transitions": 6,
@@ -187,19 +178,28 @@
         "num_move": 6,
         "num_rotate": 0,
         "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 4.0,
+        "num_states": 5,
+        "num_transitions": 4,
+        "num_wait": 0,
+        "num_move": 4,
+        "num_rotate": 0,
+        "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_04",
     "case_name": "Case 04: two robot with obstacle wall",
     "purpose": "障害物あり協調",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.011959799972828478,
+    "planning_time_sec": 0.01801340002566576,
     "num_robots": 2,
     "makespan": 9.15,
     "sum_of_costs": 18.3,
@@ -227,17 +227,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_04",
     "case_name": "Case 04: two robot with obstacle wall",
     "purpose": "障害物あり協調",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.04439009999623522,
+    "planning_time_sec": 0.045820699946489185,
     "num_robots": 2,
     "makespan": 8.05,
     "sum_of_costs": 16.1,
@@ -265,17 +265,17 @@
         "num_move_rotate": 1
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_a",
     "case_name": "Case A: move+rotate helpful",
     "purpose": "move+rotate 有効例",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.008822200004942715,
+    "planning_time_sec": 0.009773100027814507,
     "num_robots": 1,
     "makespan": 7.15,
     "sum_of_costs": 7.15,
@@ -294,17 +294,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_a",
     "case_name": "Case A: move+rotate helpful",
     "purpose": "move+rotate 有効例",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.03906370000913739,
+    "planning_time_sec": 0.037925300013739616,
     "num_robots": 1,
     "makespan": 6.05,
     "sum_of_costs": 6.05,
@@ -323,17 +323,17 @@
         "num_move_rotate": 1
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_b",
     "case_name": "Case B: move+rotate likely unhelpful",
     "purpose": "move+rotate 不要例",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.007222999993246049,
+    "planning_time_sec": 0.007141500012949109,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -361,17 +361,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_b",
     "case_name": "Case B: move+rotate likely unhelpful",
     "purpose": "move+rotate 不要例",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.0371026000357233,
+    "planning_time_sec": 0.03759909997461364,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -399,33 +399,71 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   },
   {
-    "planner_name": "CBS+A*",
+    "planner_name": "LaCAM",
     "case_id": "case_c",
     "case_name": "Case C: coordination sensitive",
     "purpose": "干渉が強い協調ケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 2.416591299988795,
+    "planning_time_sec": 0.017427699989639223,
     "num_robots": 2,
-    "makespan": 10.0,
-    "sum_of_costs": 16.0,
-    "total_wait": 4,
+    "makespan": 11.0,
+    "sum_of_costs": 17.0,
+    "total_wait": 5,
     "total_move": 12,
     "total_rotate": 0,
     "total_move_rotate": 0,
     "per_robot": {
       "0": {
-        "cost": 10.0,
+        "cost": 11.0,
+        "num_states": 12,
+        "num_transitions": 11,
+        "num_wait": 5,
+        "num_move": 6,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 6.0,
+        "num_states": 7,
+        "num_transitions": 6,
+        "num_wait": 0,
+        "num_move": 6,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      }
+    },
+    "notes": "solved | python_orientation_lacam_step1"
+  },
+  {
+    "planner_name": "LaCAM",
+    "case_id": "case_c",
+    "case_name": "Case C: coordination sensitive",
+    "purpose": "干渉が強い協調ケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": true,
+    "success": true,
+    "planning_time_sec": 0.06080969999311492,
+    "num_robots": 2,
+    "makespan": 10.1,
+    "sum_of_costs": 16.1,
+    "total_wait": 4,
+    "total_move": 10,
+    "total_rotate": 0,
+    "total_move_rotate": 2,
+    "per_robot": {
+      "0": {
+        "cost": 10.1,
         "num_states": 11,
         "num_transitions": 10,
         "num_wait": 4,
-        "num_move": 6,
+        "num_move": 4,
         "num_rotate": 0,
-        "num_move_rotate": 0
+        "num_move_rotate": 2
       },
       "1": {
         "cost": 6.0,
@@ -437,44 +475,6 @@
         "num_move_rotate": 0
       }
     },
-    "notes": ""
-  },
-  {
-    "planner_name": "CBS+A*",
-    "case_id": "case_c",
-    "case_name": "Case C: coordination sensitive",
-    "purpose": "干渉が強い協調ケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": true,
-    "success": true,
-    "planning_time_sec": 47.84362450003391,
-    "num_robots": 2,
-    "makespan": 10.2,
-    "sum_of_costs": 14.2,
-    "total_wait": 0,
-    "total_move": 10,
-    "total_rotate": 0,
-    "total_move_rotate": 4,
-    "per_robot": {
-      "0": {
-        "cost": 4.0,
-        "num_states": 5,
-        "num_transitions": 4,
-        "num_wait": 0,
-        "num_move": 4,
-        "num_rotate": 0,
-        "num_move_rotate": 0
-      },
-      "1": {
-        "cost": 10.2,
-        "num_states": 11,
-        "num_transitions": 10,
-        "num_wait": 0,
-        "num_move": 6,
-        "num_rotate": 0,
-        "num_move_rotate": 4
-      }
-    },
-    "notes": ""
+    "notes": "solved | python_orientation_lacam_step1"
   }
 ]
