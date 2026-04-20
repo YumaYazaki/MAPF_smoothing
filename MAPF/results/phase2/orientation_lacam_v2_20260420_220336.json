@@ -1,13 +1,13 @@
 [
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_01",
     "case_name": "Case 01: rotation only",
     "purpose": "回転単体確認",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.006706500018481165,
+    "planning_time_sec": 0.006113600044045597,
     "num_robots": 1,
     "makespan": 2.3,
     "sum_of_costs": 2.3,
@@ -26,17 +26,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_01",
     "case_name": "Case 01: rotation only",
     "purpose": "回転単体確認",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.037098800006788224,
+    "planning_time_sec": 0.03483119996963069,
     "num_robots": 1,
     "makespan": 2.3,
     "sum_of_costs": 2.3,
@@ -55,17 +55,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_02",
     "case_name": "Case 02: move+rotate",
     "purpose": "move+rotate 単体効果",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.0069923000410199165,
+    "planning_time_sec": 0.00612639996688813,
     "num_robots": 1,
     "makespan": 3.15,
     "sum_of_costs": 3.15,
@@ -84,17 +84,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_02",
     "case_name": "Case 02: move+rotate",
     "purpose": "move+rotate 単体効果",
     "tier": "Tier 1: primitive sanity",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.047622299985960126,
+    "planning_time_sec": 0.034467199991922826,
     "num_robots": 1,
     "makespan": 2.05,
     "sum_of_costs": 2.05,
@@ -113,17 +113,17 @@
         "num_move_rotate": 1
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_03",
     "case_name": "Case 03: two robot corridor",
     "purpose": "単純な2台対向協調",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.030677600007038563,
+    "planning_time_sec": 0.021208900026977062,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -151,17 +151,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_03",
     "case_name": "Case 03: two robot corridor",
     "purpose": "単純な2台対向協調",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.1412457999540493,
+    "planning_time_sec": 0.09159389999695122,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -189,62 +189,62 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_04",
     "case_name": "Case 04: two robot with obstacle wall",
     "purpose": "障害物あり協調",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.659979599993676,
+    "planning_time_sec": 0.10650970001006499,
     "num_robots": 2,
-    "makespan": 11.15,
-    "sum_of_costs": 22.3,
-    "total_wait": 2,
-    "total_move": 18,
-    "total_rotate": 2,
+    "makespan": 11.450000000000001,
+    "sum_of_costs": 22.900000000000002,
+    "total_wait": 0,
+    "total_move": 16,
+    "total_rotate": 6,
     "total_move_rotate": 0,
     "per_robot": {
       "0": {
-        "cost": 11.15,
+        "cost": 11.450000000000001,
         "num_states": 12,
         "num_transitions": 11,
         "num_wait": 0,
-        "num_move": 10,
-        "num_rotate": 1,
-        "num_move_rotate": 0
-      },
-      "1": {
-        "cost": 11.15,
-        "num_states": 12,
-        "num_transitions": 11,
-        "num_wait": 2,
         "num_move": 8,
-        "num_rotate": 1,
+        "num_rotate": 3,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 11.450000000000001,
+        "num_states": 12,
+        "num_transitions": 11,
+        "num_wait": 0,
+        "num_move": 8,
+        "num_rotate": 3,
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_04",
     "case_name": "Case 04: two robot with obstacle wall",
     "purpose": "障害物あり協調",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.14721550000831485,
+    "planning_time_sec": 0.0699161000084132,
     "num_robots": 2,
-    "makespan": 9.15,
-    "sum_of_costs": 18.299999999999997,
-    "total_wait": 2,
-    "total_move": 10,
-    "total_rotate": 0,
-    "total_move_rotate": 6,
+    "makespan": 9.25,
+    "sum_of_costs": 18.4,
+    "total_wait": 1,
+    "total_move": 11,
+    "total_rotate": 1,
+    "total_move_rotate": 5,
     "per_robot": {
       "0": {
         "cost": 9.15,
@@ -256,26 +256,26 @@
         "num_move_rotate": 3
       },
       "1": {
-        "cost": 9.149999999999999,
+        "cost": 9.25,
         "num_states": 10,
         "num_transitions": 9,
-        "num_wait": 1,
-        "num_move": 5,
-        "num_rotate": 0,
-        "num_move_rotate": 3
+        "num_wait": 0,
+        "num_move": 6,
+        "num_rotate": 1,
+        "num_move_rotate": 2
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_a",
     "case_name": "Case A: move+rotate helpful",
     "purpose": "move+rotate 有効例",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.007877600030042231,
+    "planning_time_sec": 0.0090912000159733,
     "num_robots": 1,
     "makespan": 7.15,
     "sum_of_costs": 7.15,
@@ -294,17 +294,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_a",
     "case_name": "Case A: move+rotate helpful",
     "purpose": "move+rotate 有効例",
     "tier": "Tier 3: obstacle helpful",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.03827090002596378,
+    "planning_time_sec": 0.03837209998164326,
     "num_robots": 1,
     "makespan": 6.05,
     "sum_of_costs": 6.05,
@@ -323,17 +323,17 @@
         "num_move_rotate": 1
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3_single_agent_fast_path"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_b",
     "case_name": "Case B: move+rotate likely unhelpful",
     "purpose": "move+rotate 不要例",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.0102259999839589,
+    "planning_time_sec": 0.011285599961411208,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -361,17 +361,17 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_b",
     "case_name": "Case B: move+rotate likely unhelpful",
     "purpose": "move+rotate 不要例",
     "tier": "Tier 2: simple coordination",
     "enable_move_rotate": true,
     "success": true,
-    "planning_time_sec": 0.04227340000215918,
+    "planning_time_sec": 0.0496794999926351,
     "num_robots": 2,
     "makespan": 6.0,
     "sum_of_costs": 12.0,
@@ -399,22 +399,230 @@
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_c",
     "case_name": "Case C: coordination sensitive",
     "purpose": "干渉が強い協調ケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": false,
     "success": true,
-    "planning_time_sec": 0.3167236000299454,
+    "planning_time_sec": 0.1992418000008911,
     "num_robots": 2,
-    "makespan": 10.0,
-    "sum_of_costs": 20.0,
-    "total_wait": 2,
+    "makespan": 11.0,
+    "sum_of_costs": 22.0,
+    "total_wait": 4,
     "total_move": 18,
+    "total_rotate": 0,
+    "total_move_rotate": 0,
+    "per_robot": {
+      "0": {
+        "cost": 11.0,
+        "num_states": 12,
+        "num_transitions": 11,
+        "num_wait": 3,
+        "num_move": 8,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 11.0,
+        "num_states": 12,
+        "num_transitions": 11,
+        "num_wait": 1,
+        "num_move": 10,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      }
+    },
+    "notes": "solved | orientation_lacam_v3"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_c",
+    "case_name": "Case C: coordination sensitive",
+    "purpose": "干渉が強い協調ケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": true,
+    "success": true,
+    "planning_time_sec": 1.3664196000318043,
+    "num_robots": 2,
+    "makespan": 9.500000000000002,
+    "sum_of_costs": 18.5,
+    "total_wait": 3,
+    "total_move": 7,
+    "total_rotate": 1,
+    "total_move_rotate": 7,
+    "per_robot": {
+      "0": {
+        "cost": 9.0,
+        "num_states": 10,
+        "num_transitions": 9,
+        "num_wait": 3,
+        "num_move": 6,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 9.500000000000002,
+        "num_states": 10,
+        "num_transitions": 9,
+        "num_wait": 0,
+        "num_move": 1,
+        "num_rotate": 1,
+        "num_move_rotate": 7
+      }
+    },
+    "notes": "solved | orientation_lacam_v3"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_d",
+    "case_name": "Case D: 3-agent single bottleneck",
+    "purpose": "3台が単一ボトルネックを共有し、通過順序で品質差が出るケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": false,
+    "success": true,
+    "planning_time_sec": 7.179756800003815,
+    "num_robots": 3,
+    "makespan": 16.0,
+    "sum_of_costs": 48.0,
+    "total_wait": 16,
+    "total_move": 32,
+    "total_rotate": 0,
+    "total_move_rotate": 0,
+    "per_robot": {
+      "0": {
+        "cost": 16.0,
+        "num_states": 17,
+        "num_transitions": 16,
+        "num_wait": 10,
+        "num_move": 6,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 16.0,
+        "num_states": 17,
+        "num_transitions": 16,
+        "num_wait": 4,
+        "num_move": 12,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "2": {
+        "cost": 16.0,
+        "num_states": 17,
+        "num_transitions": 16,
+        "num_wait": 2,
+        "num_move": 14,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      }
+    },
+    "notes": "solved | orientation_lacam_v3"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_d",
+    "case_name": "Case D: 3-agent single bottleneck",
+    "purpose": "3台が単一ボトルネックを共有し、通過順序で品質差が出るケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": true,
+    "success": true,
+    "planning_time_sec": 3.4696299000061117,
+    "num_robots": 3,
+    "makespan": 15.2,
+    "sum_of_costs": 45.4,
+    "total_wait": 12,
+    "total_move": 27,
+    "total_rotate": 1,
+    "total_move_rotate": 5,
+    "per_robot": {
+      "0": {
+        "cost": 15.0,
+        "num_states": 16,
+        "num_transitions": 15,
+        "num_wait": 9,
+        "num_move": 6,
+        "num_rotate": 0,
+        "num_move_rotate": 0
+      },
+      "1": {
+        "cost": 15.2,
+        "num_states": 16,
+        "num_transitions": 15,
+        "num_wait": 3,
+        "num_move": 8,
+        "num_rotate": 0,
+        "num_move_rotate": 4
+      },
+      "2": {
+        "cost": 15.2,
+        "num_states": 16,
+        "num_transitions": 15,
+        "num_wait": 0,
+        "num_move": 13,
+        "num_rotate": 1,
+        "num_move_rotate": 1
+      }
+    },
+    "notes": "solved | orientation_lacam_v3"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_e",
+    "case_name": "Case E: 4-agent cross intersection",
+    "purpose": "4方向から中央へ同時進入する十字交差ケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": false,
+    "success": false,
+    "planning_time_sec": 43.63229629996931,
+    "num_robots": 4,
+    "makespan": null,
+    "sum_of_costs": null,
+    "total_wait": null,
+    "total_move": null,
+    "total_rotate": null,
+    "total_move_rotate": null,
+    "per_robot": null,
+    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_e",
+    "case_name": "Case E: 4-agent cross intersection",
+    "purpose": "4方向から中央へ同時進入する十字交差ケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": true,
+    "success": false,
+    "planning_time_sec": 16.663810600002762,
+    "num_robots": 4,
+    "makespan": null,
+    "sum_of_costs": null,
+    "total_wait": null,
+    "total_move": null,
+    "total_rotate": null,
+    "total_move_rotate": null,
+    "per_robot": null,
+    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
+  },
+  {
+    "planner_name": "OrientationLaCAMV3",
+    "case_id": "case_f",
+    "case_name": "Case F: pocket evacuation",
+    "purpose": "退避ポケットを使うか待機するかで差が出るケース",
+    "tier": "Tier 4: hard coordination",
+    "enable_move_rotate": false,
+    "success": true,
+    "planning_time_sec": 1.2584052999736741,
+    "num_robots": 3,
+    "makespan": 10.0,
+    "sum_of_costs": 30.0,
+    "total_wait": 9,
+    "total_move": 21,
     "total_rotate": 0,
     "total_move_rotate": 0,
     "per_robot": {
@@ -422,8 +630,8 @@
         "cost": 10.0,
         "num_states": 11,
         "num_transitions": 10,
-        "num_wait": 2,
-        "num_move": 8,
+        "num_wait": 4,
+        "num_move": 6,
         "num_rotate": 0,
         "num_move_rotate": 0
       },
@@ -435,180 +643,28 @@
         "num_move": 10,
         "num_rotate": 0,
         "num_move_rotate": 0
-      }
-    },
-    "notes": "solved | orientation_lacam_v2"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_c",
-    "case_name": "Case C: coordination sensitive",
-    "purpose": "干渉が強い協調ケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": true,
-    "success": true,
-    "planning_time_sec": 6.76029710000148,
-    "num_robots": 2,
-    "makespan": 9.3,
-    "sum_of_costs": 18.4,
-    "total_wait": 3,
-    "total_move": 9,
-    "total_rotate": 1,
-    "total_move_rotate": 5,
-    "per_robot": {
-      "0": {
-        "cost": 9.1,
-        "num_states": 10,
-        "num_transitions": 9,
-        "num_wait": 3,
-        "num_move": 4,
-        "num_rotate": 0,
-        "num_move_rotate": 2
-      },
-      "1": {
-        "cost": 9.3,
-        "num_states": 10,
-        "num_transitions": 9,
-        "num_wait": 0,
-        "num_move": 5,
-        "num_rotate": 1,
-        "num_move_rotate": 3
-      }
-    },
-    "notes": "solved | orientation_lacam_v2"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_d",
-    "case_name": "Case D: 3-agent single bottleneck",
-    "purpose": "3台が単一ボトルネックを共有し、通過順序で品質差が出るケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": false,
-    "success": false,
-    "planning_time_sec": 7.42446629999904,
-    "num_robots": 3,
-    "makespan": null,
-    "sum_of_costs": null,
-    "total_wait": null,
-    "total_move": null,
-    "total_rotate": null,
-    "total_move_rotate": null,
-    "per_robot": null,
-    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_d",
-    "case_name": "Case D: 3-agent single bottleneck",
-    "purpose": "3台が単一ボトルネックを共有し、通過順序で品質差が出るケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": true,
-    "success": false,
-    "planning_time_sec": 8.728253300010692,
-    "num_robots": 3,
-    "makespan": null,
-    "sum_of_costs": null,
-    "total_wait": null,
-    "total_move": null,
-    "total_rotate": null,
-    "total_move_rotate": null,
-    "per_robot": null,
-    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_e",
-    "case_name": "Case E: 4-agent cross intersection",
-    "purpose": "4方向から中央へ同時進入する十字交差ケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": false,
-    "success": false,
-    "planning_time_sec": 18.148076399986167,
-    "num_robots": 4,
-    "makespan": null,
-    "sum_of_costs": null,
-    "total_wait": null,
-    "total_move": null,
-    "total_rotate": null,
-    "total_move_rotate": null,
-    "per_robot": null,
-    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_e",
-    "case_name": "Case E: 4-agent cross intersection",
-    "purpose": "4方向から中央へ同時進入する十字交差ケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": true,
-    "success": false,
-    "planning_time_sec": 15.708814800018445,
-    "num_robots": 4,
-    "makespan": null,
-    "sum_of_costs": null,
-    "total_wait": null,
-    "total_move": null,
-    "total_rotate": null,
-    "total_move_rotate": null,
-    "per_robot": null,
-    "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
-  },
-  {
-    "planner_name": "OrientationLaCAM",
-    "case_id": "case_f",
-    "case_name": "Case F: pocket evacuation",
-    "purpose": "退避ポケットを使うか待機するかで差が出るケース",
-    "tier": "Tier 4: hard coordination",
-    "enable_move_rotate": false,
-    "success": true,
-    "planning_time_sec": 1.4529345000046305,
-    "num_robots": 3,
-    "makespan": 9.0,
-    "sum_of_costs": 27.0,
-    "total_wait": 8,
-    "total_move": 19,
-    "total_rotate": 0,
-    "total_move_rotate": 0,
-    "per_robot": {
-      "0": {
-        "cost": 9.0,
-        "num_states": 10,
-        "num_transitions": 9,
-        "num_wait": 3,
-        "num_move": 6,
-        "num_rotate": 0,
-        "num_move_rotate": 0
-      },
-      "1": {
-        "cost": 9.0,
-        "num_states": 10,
-        "num_transitions": 9,
-        "num_wait": 1,
-        "num_move": 8,
-        "num_rotate": 0,
-        "num_move_rotate": 0
       },
       "2": {
-        "cost": 9.0,
-        "num_states": 10,
-        "num_transitions": 9,
-        "num_wait": 4,
+        "cost": 10.0,
+        "num_states": 11,
+        "num_transitions": 10,
+        "num_wait": 5,
         "num_move": 5,
         "num_rotate": 0,
         "num_move_rotate": 0
       }
     },
-    "notes": "solved | orientation_lacam_v2"
+    "notes": "solved | orientation_lacam_v3"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_f",
     "case_name": "Case F: pocket evacuation",
     "purpose": "退避ポケットを使うか待機するかで差が出るケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": true,
     "success": false,
-    "planning_time_sec": 11.305359399993904,
+    "planning_time_sec": 10.210109499981627,
     "num_robots": 3,
     "makespan": null,
     "sum_of_costs": null,
@@ -620,14 +676,14 @@
     "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_g",
     "case_name": "Case G: double bottleneck",
     "purpose": "2つの狭窄部をまたぐため局所最適に落ちやすいケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": false,
     "success": false,
-    "planning_time_sec": 12.011883100029081,
+    "planning_time_sec": 32.635615100036375,
     "num_robots": 4,
     "makespan": null,
     "sum_of_costs": null,
@@ -639,14 +695,14 @@
     "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_g",
     "case_name": "Case G: double bottleneck",
     "purpose": "2つの狭窄部をまたぐため局所最適に落ちやすいケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": true,
     "success": false,
-    "planning_time_sec": 13.04527230001986,
+    "planning_time_sec": 14.334937700012233,
     "num_robots": 4,
     "makespan": null,
     "sum_of_costs": null,
@@ -658,14 +714,14 @@
     "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_h",
     "case_name": "Case H: asymmetric orientation-critical",
     "purpose": "姿勢変更が本質的に効く非対称な強干渉ケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": false,
     "success": false,
-    "planning_time_sec": 7.417680499958806,
+    "planning_time_sec": 17.137915099970996,
     "num_robots": 3,
     "makespan": null,
     "sum_of_costs": null,
@@ -677,14 +733,14 @@
     "notes": "max_high_level_expansions_exceeded | Exceeded max_high_level_expansions=20000"
   },
   {
-    "planner_name": "OrientationLaCAM",
+    "planner_name": "OrientationLaCAMV3",
     "case_id": "case_h",
     "case_name": "Case H: asymmetric orientation-critical",
     "purpose": "姿勢変更が本質的に効く非対称な強干渉ケース",
     "tier": "Tier 4: hard coordination",
     "enable_move_rotate": true,
     "success": false,
-    "planning_time_sec": 9.272415300016291,
+    "planning_time_sec": 10.225383199984208,
     "num_robots": 3,
     "makespan": null,
     "sum_of_costs": null,
