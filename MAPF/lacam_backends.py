@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import heapq
 from dataclasses import dataclass
-from typing import Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
+from typing import Dict, FrozenSet, List, Optional, Set, Tuple
 
 from lacam_adapter import LaCAMProblem, LaCAMSolution
 from lacam_runner import LaCAMBackend, LaCAMRunnerConfig
@@ -34,12 +34,35 @@ class SearchNode:
     time_step: int
 
 
+@dataclass(frozen=True)
+class RepairCandidate:
+    """repair 候補。
+
+    Attributes:
+        paths_by_agent: 候補経路群。
+        repaired_agents: 再計画したロボットID列。
+        num_conflicts: 候補に残る競合数。
+        makespan: makespan。
+        sum_of_costs: cost 総和。
+        score: 総合スコア。
+        notes: 補助説明。
+    """
+
+    paths_by_agent: Dict[int, List[int]]
+    repaired_agents: Tuple[int, ...]
+    num_conflicts: int
+    makespan: float
+    sum_of_costs: float
+    score: float
+    notes: str
+
+
 class PythonOrientationLaCAMBackend(LaCAMBackend):
-    """`OrientationGraph` を直接使う最小実装版 backend。
+    """`OrientationGraph` を直接使う改修版 backend。
 
     注意:
         これは LaCAM* の完全再現ではなく、
-        Phase 2 を回し始めるための最小実装である。
+        Phase 2 比較のための姿勢付き backend 実装である。
     """
 
     def __init__(
@@ -91,7 +114,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
                     comp_time_sec=0.0,
                     paths_by_agent=paths,
                     raw_status="solved",
-                    notes="python_orientation_lacam_step1",
+                    notes="python_orientation_lacam_step2",
                 )
 
             robot_i, robot_j = conflict
@@ -212,7 +235,6 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
                 graph.is_goal(current.state_id, goal_state_id)
                 and not self._violates_goal_hold(
                     problem=problem,
-                    robot_id=robot_id,
                     state_id=current.state_id,
                     time_step=current.time_step,
                     reservation=reservation,
@@ -271,15 +293,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         problem: LaCAMProblem,
         fixed_paths: Dict[int, List[int]],
     ) -> ReservationTable:
-        """固定済み経路群から予約表を作る。
-
-        Args:
-            problem: LaCAM 問題。
-            fixed_paths: 固定済み経路。
-
-        Returns:
-            予約表。
-        """
+        """固定済み経路群から予約表を作る。"""
         graph = problem.graph
         state_res: Dict[int, List[FrozenSet[tuple[int, int]]]] = {}
         trans_res: Dict[int, List[FrozenSet[tuple[int, int]]]] = {}
@@ -309,7 +323,6 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
                 )
                 trans_res.setdefault(time_step, []).append(env_cells)
 
-            # 終端後は WAIT 遷移として保持
             final_state = graph.id_to_state(state_ids[-1])
             final_node, final_mode = graph.oriented_state_to_internal(final_state)
             final_env = graph.env.transition_envelope(
@@ -332,15 +345,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         problem: LaCAMProblem,
         paths_by_agent: Dict[int, List[int]],
     ) -> Optional[Tuple[int, int]]:
-        """最初の競合ロボット対を返す。
-
-        Args:
-            problem: LaCAM 問題。
-            paths_by_agent: ロボットごとの状態ID列。
-
-        Returns:
-            (robot_i, robot_j) または None。
-        """
+        """最初の競合ロボット対を返す。"""
         graph = problem.graph
         robot_ids = sorted(paths_by_agent.keys())
         max_len = max(len(path) for path in paths_by_agent.values())
@@ -351,55 +356,249 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
                     robot_i = robot_ids[idx_i]
                     robot_j = robot_ids[idx_j]
 
-                    state_i = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_i], time_step)
-                    )
-                    state_j = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_j], time_step)
-                    )
-
-                    node_i, mode_i = graph.oriented_state_to_internal(state_i)
-                    node_j, mode_j = graph.oriented_state_to_internal(state_j)
-
-                    occ_i = graph.env.state_occupancy_key(node_i, mode_i)
-                    occ_j = graph.env.state_occupancy_key(node_j, mode_j)
-                    if occ_i & occ_j:
-                        return robot_i, robot_j
-
-                    src_i = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_i], time_step)
-                    )
-                    dst_i = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_i], time_step + 1)
-                    )
-                    src_j = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_j], time_step)
-                    )
-                    dst_j = graph.id_to_state(
-                        self._state_id_at_time(paths_by_agent[robot_j], time_step + 1)
-                    )
-
-                    src_i_node, src_i_mode = graph.oriented_state_to_internal(src_i)
-                    dst_i_node, dst_i_mode = graph.oriented_state_to_internal(dst_i)
-                    src_j_node, src_j_mode = graph.oriented_state_to_internal(src_j)
-                    dst_j_node, dst_j_mode = graph.oriented_state_to_internal(dst_j)
-
-                    env_i = graph.env.transition_envelope(
-                        from_node=src_i_node,
-                        from_mode=src_i_mode,
-                        to_node=dst_i_node,
-                        to_mode=dst_i_mode,
-                    )
-                    env_j = graph.env.transition_envelope(
-                        from_node=src_j_node,
-                        from_mode=src_j_mode,
-                        to_node=dst_j_node,
-                        to_mode=dst_j_mode,
-                    )
-                    if env_i & env_j:
+                    if self._pair_conflicts(
+                        problem=problem,
+                        paths_by_agent=paths_by_agent,
+                        robot_i=robot_i,
+                        robot_j=robot_j,
+                        time_step=time_step,
+                    ):
                         return robot_i, robot_j
 
         return None
+
+    def _pair_conflicts(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+        robot_i: int,
+        robot_j: int,
+        time_step: int,
+    ) -> bool:
+        """ロボット対が特定時刻で競合するか判定する。"""
+        graph = problem.graph
+
+        state_i = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_i], time_step)
+        )
+        state_j = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_j], time_step)
+        )
+
+        node_i, mode_i = graph.oriented_state_to_internal(state_i)
+        node_j, mode_j = graph.oriented_state_to_internal(state_j)
+
+        occ_i = graph.env.state_occupancy_key(node_i, mode_i)
+        occ_j = graph.env.state_occupancy_key(node_j, mode_j)
+        if occ_i & occ_j:
+            return True
+
+        src_i = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_i], time_step)
+        )
+        dst_i = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_i], time_step + 1)
+        )
+        src_j = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_j], time_step)
+        )
+        dst_j = graph.id_to_state(
+            self._state_id_at_time(paths_by_agent[robot_j], time_step + 1)
+        )
+
+        src_i_node, src_i_mode = graph.oriented_state_to_internal(src_i)
+        dst_i_node, dst_i_mode = graph.oriented_state_to_internal(dst_i)
+        src_j_node, src_j_mode = graph.oriented_state_to_internal(src_j)
+        dst_j_node, dst_j_mode = graph.oriented_state_to_internal(dst_j)
+
+        env_i = graph.env.transition_envelope(
+            from_node=src_i_node,
+            from_mode=src_i_mode,
+            to_node=dst_i_node,
+            to_mode=dst_i_mode,
+        )
+        env_j = graph.env.transition_envelope(
+            from_node=src_j_node,
+            from_mode=src_j_mode,
+            to_node=dst_j_node,
+            to_mode=dst_j_mode,
+        )
+        return bool(env_i & env_j)
+
+    def _count_conflicts(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+    ) -> int:
+        """経路群全体に含まれる競合数を数える。"""
+        robot_ids = sorted(paths_by_agent.keys())
+        max_len = max(len(path) for path in paths_by_agent.values())
+        num_conflicts = 0
+
+        for time_step in range(max_len):
+            for idx_i in range(len(robot_ids)):
+                for idx_j in range(idx_i + 1, len(robot_ids)):
+                    robot_i = robot_ids[idx_i]
+                    robot_j = robot_ids[idx_j]
+                    if self._pair_conflicts(
+                        problem=problem,
+                        paths_by_agent=paths_by_agent,
+                        robot_i=robot_i,
+                        robot_j=robot_j,
+                        time_step=time_step,
+                    ):
+                        num_conflicts += 1
+
+        return num_conflicts
+
+    def _compute_path_metrics(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+    ) -> Tuple[float, float]:
+        """候補経路群の makespan と sum_of_costs を返す。"""
+        graph = problem.graph
+        robot_paths = {
+            robot_id: graph.path_state_ids_to_robot_path(state_ids)
+            for robot_id, state_ids in paths_by_agent.items()
+        }
+        makespan = max(path.cost for path in robot_paths.values())
+        sum_of_costs = sum(path.cost for path in robot_paths.values())
+        return makespan, sum_of_costs
+
+    def _evaluate_repair_candidate(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+        repaired_agents: Tuple[int, ...],
+        notes: str,
+    ) -> RepairCandidate:
+        """候補を評価して `RepairCandidate` を返す。"""
+        num_conflicts = self._count_conflicts(
+            problem=problem,
+            paths_by_agent=paths_by_agent,
+        )
+        makespan, sum_of_costs = self._compute_path_metrics(
+            problem=problem,
+            paths_by_agent=paths_by_agent,
+        )
+        score = 1000.0 * num_conflicts + 10.0 * makespan + sum_of_costs
+
+        return RepairCandidate(
+            paths_by_agent=paths_by_agent,
+            repaired_agents=repaired_agents,
+            num_conflicts=num_conflicts,
+            makespan=makespan,
+            sum_of_costs=sum_of_costs,
+            score=score,
+            notes=notes,
+        )
+
+    def _generate_single_agent_repair_candidates(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+        robot_id: int,
+    ) -> List[RepairCandidate]:
+        """1台だけ再計画した候補を生成する。"""
+        fixed_paths = {
+            rid: path
+            for rid, path in paths_by_agent.items()
+            if rid != robot_id
+        }
+        repaired_path = self._plan_single_agent_path(
+            problem=problem,
+            robot_id=robot_id,
+            fixed_paths=fixed_paths,
+        )
+        if repaired_path is None:
+            return []
+
+        candidate_paths = dict(paths_by_agent)
+        candidate_paths[robot_id] = repaired_path
+
+        return [
+            self._evaluate_repair_candidate(
+                problem=problem,
+                paths_by_agent=candidate_paths,
+                repaired_agents=(robot_id,),
+                notes=f"single_agent_repair: robot={robot_id}",
+            )
+        ]
+
+    def _generate_two_agent_repair_candidates(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+        robot_i: int,
+        robot_j: int,
+    ) -> List[RepairCandidate]:
+        """2台順次再計画した候補を生成する。"""
+        candidates: List[RepairCandidate] = []
+
+        for first_robot, second_robot in ((robot_i, robot_j), (robot_j, robot_i)):
+            fixed_except_first = {
+                rid: path
+                for rid, path in paths_by_agent.items()
+                if rid != first_robot
+            }
+            new_first = self._plan_single_agent_path(
+                problem=problem,
+                robot_id=first_robot,
+                fixed_paths=fixed_except_first,
+            )
+            if new_first is None:
+                continue
+
+            temp_paths = dict(paths_by_agent)
+            temp_paths[first_robot] = new_first
+
+            fixed_except_second = {
+                rid: path
+                for rid, path in temp_paths.items()
+                if rid != second_robot
+            }
+            new_second = self._plan_single_agent_path(
+                problem=problem,
+                robot_id=second_robot,
+                fixed_paths=fixed_except_second,
+            )
+            if new_second is None:
+                continue
+
+            temp_paths[second_robot] = new_second
+
+            candidates.append(
+                self._evaluate_repair_candidate(
+                    problem=problem,
+                    paths_by_agent=temp_paths,
+                    repaired_agents=(first_robot, second_robot),
+                    notes=(
+                        "two_agent_repair: "
+                        f"{first_robot}->{second_robot}"
+                    ),
+                )
+            )
+
+        return candidates
+
+    def _select_best_repair_candidate(
+        self,
+        candidates: List[RepairCandidate],
+    ) -> Optional[RepairCandidate]:
+        """候補群の中から最良候補を返す。"""
+        if not candidates:
+            return None
+
+        return min(
+            candidates,
+            key=lambda c: (
+                c.score,
+                c.num_conflicts,
+                c.makespan,
+                c.sum_of_costs,
+            ),
+        )
 
     def _repair_conflicted_agents(
         self,
@@ -408,62 +607,42 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         robot_i: int,
         robot_j: int,
     ) -> Optional[Dict[int, List[int]]]:
-        """競合ロボット対の片方ずつ再計画を試みる。
-
-        Args:
-            problem: LaCAM 問題。
-            paths_by_agent: 現在の経路群。
-            robot_i: 競合ロボット1。
-            robot_j: 競合ロボット2。
-
-        Returns:
-            改善された経路群。失敗時は None。
-        """
-        for target_robot in (robot_i, robot_j):
-            fixed_paths = {
-                rid: path
-                for rid, path in paths_by_agent.items()
-                if rid != target_robot
-            }
-            repaired_path = self._plan_single_agent_path(
-                problem=problem,
-                robot_id=target_robot,
-                fixed_paths=fixed_paths,
-            )
-            if repaired_path is None:
-                continue
-
-            candidate = dict(paths_by_agent)
-            candidate[target_robot] = repaired_path
-
-            if self._detect_first_conflict(problem, candidate) is None:
-                return candidate
-
-        # 片方ずつでダメなら両方順次再計画を試す
-        fixed_except_i = {
-            rid: path for rid, path in paths_by_agent.items() if rid != robot_i
-        }
-        new_i = self._plan_single_agent_path(
+        """競合ロボット対の repair 候補を生成・比較して採用する。"""
+        current_num_conflicts = self._count_conflicts(
             problem=problem,
-            robot_id=robot_i,
-            fixed_paths=fixed_except_i,
+            paths_by_agent=paths_by_agent,
         )
-        if new_i is not None:
-            temp_paths = dict(paths_by_agent)
-            temp_paths[robot_i] = new_i
 
-            fixed_except_j = {
-                rid: path for rid, path in temp_paths.items() if rid != robot_j
-            }
-            new_j = self._plan_single_agent_path(
+        candidates: List[RepairCandidate] = []
+        candidates.extend(
+            self._generate_single_agent_repair_candidates(
                 problem=problem,
-                robot_id=robot_j,
-                fixed_paths=fixed_except_j,
+                paths_by_agent=paths_by_agent,
+                robot_id=robot_i,
             )
-            if new_j is not None:
-                temp_paths[robot_j] = new_j
-                if self._detect_first_conflict(problem, temp_paths) is None:
-                    return temp_paths
+        )
+        candidates.extend(
+            self._generate_single_agent_repair_candidates(
+                problem=problem,
+                paths_by_agent=paths_by_agent,
+                robot_id=robot_j,
+            )
+        )
+        candidates.extend(
+            self._generate_two_agent_repair_candidates(
+                problem=problem,
+                paths_by_agent=paths_by_agent,
+                robot_i=robot_i,
+                robot_j=robot_j,
+            )
+        )
+
+        best_candidate = self._select_best_repair_candidate(candidates)
+        if best_candidate is None:
+            return None
+
+        if best_candidate.num_conflicts <= current_num_conflicts:
+            return best_candidate.paths_by_agent
 
         return None
 
@@ -525,7 +704,6 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
     def _violates_goal_hold(
         self,
         problem: LaCAMProblem,
-        robot_id: int,
         state_id: int,
         time_step: int,
         reservation: ReservationTable,
