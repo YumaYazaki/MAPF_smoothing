@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import heapq
 from dataclasses import dataclass
-from typing import Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Dict, FrozenSet, List, Optional, Tuple
 
 from lacam_adapter import LaCAMProblem, LaCAMSolution
 from lacam_runner import LaCAMBackend, LaCAMRunnerConfig
-from mapf_types import ActionType
 
 
 @dataclass(frozen=True)
@@ -153,14 +152,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         self,
         problem: LaCAMProblem,
     ) -> Optional[Dict[int, List[int]]]:
-        """各ロボットを独立に解いて初期解を作る。
-
-        Args:
-            problem: LaCAM 問題。
-
-        Returns:
-            初期経路群。失敗時は None。
-        """
+        """各ロボットを独立に解いて初期解を作る。"""
         paths: Dict[int, List[int]] = {}
 
         for robot_id in sorted(problem.start_state_ids.keys()):
@@ -181,16 +173,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         robot_id: int,
         fixed_paths: Dict[int, List[int]],
     ) -> Optional[List[int]]:
-        """単一ロボットの時間拡張A*を実行する。
-
-        Args:
-            problem: LaCAM 問題。
-            robot_id: 対象ロボットID。
-            fixed_paths: 固定済み他ロボット経路。
-
-        Returns:
-            状態ID列。失敗時は None。
-        """
+        """単一ロボットの時間拡張A*を実行する。"""
         reservation = self._build_reservation_table(
             problem=problem,
             fixed_paths=fixed_paths,

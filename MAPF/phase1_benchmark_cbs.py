@@ -22,6 +22,10 @@ from cbs import cbs_plan
 
 RESULT_DIR = Path("MAPF/results/phase1")
 
+# CBS 高レベル探索の打ち切り条件
+CBS_MAX_WALLCLOCK_SEC = 60.0
+CBS_MAX_HIGH_LEVEL_EXPANSIONS = 10000
+
 
 def get_phase1_benchmark_cases() -> list[BenchmarkCaseSpec]:
     """Phase 1 で固定するベンチマークケース一覧を返す。
@@ -138,6 +142,133 @@ def get_phase1_benchmark_cases() -> list[BenchmarkCaseSpec]:
             max_time=30,
             tier="Tier 4: hard coordination",
         ),
+        BenchmarkCaseSpec(
+            case_id="case_d",
+            case_name="Case D: 3-agent single bottleneck",
+            purpose="3台が単一ボトルネックを共有し、通過順序で品質差が出るケース",
+            rows=5,
+            cols=9,
+            obstacles=[
+                (0, 4),
+                (1, 4),
+                (3, 4),
+                (4, 4),
+            ],
+            starts={
+                0: (2, 1, 0),
+                1: (1, 7, 180),
+                2: (3, 7, 180),
+            },
+            goals={
+                0: (2, 7, 0),
+                1: (1, 1, 180),
+                2: (3, 1, 180),
+            },
+            max_time=40,
+            tier="Tier 4: hard coordination",
+        ),
+        BenchmarkCaseSpec(
+            case_id="case_e",
+            case_name="Case E: 4-agent cross intersection",
+            purpose="4方向から中央へ同時進入する十字交差ケース",
+            rows=7,
+            cols=7,
+            obstacles=[],
+            starts={
+                0: (3, 0, 0),
+                1: (0, 3, 270),
+                2: (3, 6, 180),
+                3: (6, 3, 90),
+            },
+            goals={
+                0: (3, 6, 0),
+                1: (6, 3, 270),
+                2: (3, 0, 180),
+                3: (0, 3, 90),
+            },
+            max_time=50,
+            tier="Tier 4: hard coordination",
+        ),
+        BenchmarkCaseSpec(
+            case_id="case_f",
+            case_name="Case F: pocket evacuation",
+            purpose="退避ポケットを使うか待機するかで差が出るケース",
+            rows=5,
+            cols=9,
+            obstacles=[
+                (0, 4),
+                (1, 4),
+                (4, 4),
+            ],
+            starts={
+                0: (2, 1, 0),
+                1: (2, 7, 180),
+                2: (3, 6, 180),
+            },
+            goals={
+                0: (2, 7, 0),
+                1: (2, 1, 180),
+                2: (3, 1, 180),
+            },
+            max_time=40,
+            tier="Tier 4: hard coordination",
+        ),
+        BenchmarkCaseSpec(
+            case_id="case_g",
+            case_name="Case G: double bottleneck",
+            purpose="2つの狭窄部をまたぐため局所最適に落ちやすいケース",
+            rows=5,
+            cols=11,
+            obstacles=[
+                (0, 3),
+                (1, 3),
+                (3, 3),
+                (4, 3),
+                (0, 7),
+                (1, 7),
+                (3, 7),
+                (4, 7),
+            ],
+            starts={
+                0: (2, 1, 0),
+                1: (1, 9, 180),
+                2: (2, 9, 180),
+                3: (3, 9, 180),
+            },
+            goals={
+                0: (2, 9, 0),
+                1: (1, 1, 180),
+                2: (2, 1, 180),
+                3: (3, 1, 180),
+            },
+            max_time=60,
+            tier="Tier 4: hard coordination",
+        ),
+        BenchmarkCaseSpec(
+            case_id="case_h",
+            case_name="Case H: asymmetric orientation-critical",
+            purpose="姿勢変更が本質的に効く非対称な強干渉ケース",
+            rows=6,
+            cols=8,
+            obstacles=[
+                (0, 3),
+                (1, 3),
+                (4, 3),
+                (5, 3),
+            ],
+            starts={
+                0: (2, 1, 0),
+                1: (3, 6, 180),
+                2: (2, 6, 180),
+            },
+            goals={
+                0: (3, 6, 90),
+                1: (2, 1, 270),
+                2: (2, 2, 180),
+            },
+            max_time=50,
+            tier="Tier 4: hard coordination",
+        ),
     ]
 
 
@@ -174,6 +305,8 @@ def run_single_case(
         env=env,
         max_time=case.max_time,
         debug=debug,
+        max_wallclock_sec=CBS_MAX_WALLCLOCK_SEC,
+        max_high_level_expansions=CBS_MAX_HIGH_LEVEL_EXPANSIONS,
     )
     planning_time_sec = time.perf_counter() - start_time
 
@@ -195,7 +328,12 @@ def run_single_case(
             total_rotate=None,
             total_move_rotate=None,
             per_robot=None,
-            notes="No solution found",
+            notes=(
+                "No solution found "
+                f"(max_wallclock_sec={CBS_MAX_WALLCLOCK_SEC}, "
+                f"max_high_level_expansions="
+                f"{CBS_MAX_HIGH_LEVEL_EXPANSIONS})"
+            ),
         )
 
     return summarize_solution(
@@ -246,6 +384,12 @@ def main() -> None:
     all_results: list[BenchmarkResult] = []
 
     print("=== Phase 1 benchmark start ===")
+    print(
+        "CBS limits: "
+        f"max_wallclock_sec={CBS_MAX_WALLCLOCK_SEC}, "
+        f"max_high_level_expansions={CBS_MAX_HIGH_LEVEL_EXPANSIONS}"
+    )
+
     for case in cases:
         for enable_move_rotate in (False, True):
             result = run_single_case(
@@ -262,19 +406,18 @@ def main() -> None:
                 f"success={result.success} | "
                 f"time={result.planning_time_sec:.6f}s | "
                 f"makespan={result.makespan} | "
-                f"cost={result.sum_of_costs}"
+                f"cost={result.sum_of_costs} | "
+                f"notes={result.notes}"
             )
 
     result_payload = build_result_payload(all_results)
     csv_rows = build_csv_rows(all_results)
 
-    # ベンチマーク仕様の固定保存
     save_benchmark_spec(
         RESULT_DIR / "benchmark_spec.json",
         cases=cases,
     )
 
-    # 最新版として保存
     save_json(
         RESULT_DIR / "cbs_astar_baseline_latest.json",
         result_payload,
@@ -289,7 +432,6 @@ def main() -> None:
         results=all_results,
     )
 
-    # タイムスタンプ付き保存
     save_json(
         RESULT_DIR / f"cbs_astar_baseline_{timestamp}.json",
         result_payload,

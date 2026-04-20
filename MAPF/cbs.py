@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import heapq
+import time
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Set, Tuple
 
@@ -22,7 +23,7 @@ from mapf_types import (
 
 @dataclass(order=True)
 class CBSQueueItem:
-    """CBSオープンリスト用要素。"""
+    """CBS オープンリスト用要素。"""
 
     priority: float
     node_id: int = field(compare=False)
@@ -30,7 +31,7 @@ class CBSQueueItem:
 
 @dataclass
 class CBSNode:
-    """CBS高レベルノード。"""
+    """CBS 高レベルノード。"""
 
     constraints: Set[Constraint]
     paths: Dict[int, Path]
@@ -41,7 +42,15 @@ def get_state_at_time(
     path: Path,
     time: int,
 ) -> TimedState:
-    """指定時刻の状態を返す。"""
+    """指定時刻の状態を返す。
+
+    Args:
+        path: 単一ロボット経路。
+        time: 参照時刻。
+
+    Returns:
+        指定時刻の状態。終端後は最終状態を返す。
+    """
     if time < len(path.states):
         return path.states[time]
     return path.states[-1]
@@ -53,7 +62,14 @@ def get_effective_transition_at_time(
 ) -> Transition:
     """指定時刻の有効遷移を返す。
 
-    終端後は、その場WAIT遷移を返す。
+    終端後は、その場 WAIT 遷移を返す。
+
+    Args:
+        path: 単一ロボット経路。
+        time: 参照時刻。
+
+    Returns:
+        有効遷移。
     """
     if time < len(path.transitions):
         return path.transitions[time]
@@ -73,18 +89,26 @@ def detect_first_conflict(
     paths: Dict[int, Path],
     env: PlanningEnvironment,
 ) -> Optional[Conflict]:
-    """経路集合から最初の競合を検出する。"""
+    """経路集合から最初の競合を検出する。
+
+    Args:
+        paths: ロボットID -> Path。
+        env: 計画環境。
+
+    Returns:
+        最初の競合。なければ None。
+    """
     robot_ids = sorted(paths.keys())
     max_time = max(len(path.states) for path in paths.values())
 
-    for time in range(max_time):
+    for time_idx in range(max_time):
         for idx_i in range(len(robot_ids)):
             for idx_j in range(idx_i + 1, len(robot_ids)):
                 robot_i = robot_ids[idx_i]
                 robot_j = robot_ids[idx_j]
 
-                state_i = get_state_at_time(paths[robot_i], time)
-                state_j = get_state_at_time(paths[robot_j], time)
+                state_i = get_state_at_time(paths[robot_i], time_idx)
+                state_j = get_state_at_time(paths[robot_j], time_idx)
 
                 occ_i = env.state_occupancy_key(
                     node=state_i.node,
@@ -99,17 +123,17 @@ def detect_first_conflict(
                     return Conflict(
                         robot_i=robot_i,
                         robot_j=robot_j,
-                        time=time,
+                        time=time_idx,
                         conflict_type=ConflictType.STATE_OCCUPANCY,
                         state_i=state_i,
                         state_j=state_j,
                     )
 
                 transition_i = get_effective_transition_at_time(
-                    paths[robot_i], time
+                    paths[robot_i], time_idx
                 )
                 transition_j = get_effective_transition_at_time(
-                    paths[robot_j], time
+                    paths[robot_j], time_idx
                 )
 
                 env_i = env.transition_envelope(
@@ -129,7 +153,7 @@ def detect_first_conflict(
                     return Conflict(
                         robot_i=robot_i,
                         robot_j=robot_j,
-                        time=time,
+                        time=time_idx,
                         conflict_type=ConflictType.SWEEP_COLLISION,
                         transition_i=transition_i,
                         transition_j=transition_j,
@@ -154,7 +178,7 @@ def detect_first_conflict(
                     return Conflict(
                         robot_i=robot_i,
                         robot_j=robot_j,
-                        time=time,
+                        time=time_idx,
                         conflict_type=ConflictType.RESERVED_REGION,
                         transition_i=transition_i,
                         transition_j=transition_j,
@@ -169,14 +193,23 @@ def is_specific_conflict_present(
     conflict: Conflict,
     env: PlanningEnvironment,
 ) -> bool:
-    """指定された競合が経路集合上に依然として存在するか判定する。"""
+    """指定された競合が依然として存在するか判定する。
+
+    Args:
+        paths: ロボットID -> Path。
+        conflict: 対象競合。
+        env: 計画環境。
+
+    Returns:
+        競合が依然として存在すれば True。
+    """
     robot_i = conflict.robot_i
     robot_j = conflict.robot_j
-    time = conflict.time
+    time_idx = conflict.time
 
     if conflict.conflict_type == ConflictType.STATE_OCCUPANCY:
-        state_i = get_state_at_time(paths[robot_i], time)
-        state_j = get_state_at_time(paths[robot_j], time)
+        state_i = get_state_at_time(paths[robot_i], time_idx)
+        state_j = get_state_at_time(paths[robot_j], time_idx)
 
         occ_i = env.state_occupancy_key(
             node=state_i.node,
@@ -188,8 +221,8 @@ def is_specific_conflict_present(
         )
         return bool(occ_i & occ_j)
 
-    transition_i = get_effective_transition_at_time(paths[robot_i], time)
-    transition_j = get_effective_transition_at_time(paths[robot_j], time)
+    transition_i = get_effective_transition_at_time(paths[robot_i], time_idx)
+    transition_j = get_effective_transition_at_time(paths[robot_j], time_idx)
 
     if conflict.conflict_type == ConflictType.SWEEP_COLLISION:
         env_i = env.transition_envelope(
@@ -227,7 +260,14 @@ def is_specific_conflict_present(
 def split_conflict_into_constraints(
     conflict: Conflict,
 ) -> list[Constraint]:
-    """競合をCBS分岐用制約に変換する。"""
+    """競合を CBS 分岐用制約に変換する。
+
+    Args:
+        conflict: 対象競合。
+
+    Returns:
+        制約一覧。
+    """
     constraints: list[Constraint] = []
 
     if conflict.conflict_type == ConflictType.STATE_OCCUPANCY:
@@ -310,14 +350,14 @@ def compute_total_cost(
 def build_constraint_key(
     constraints: Set[Constraint],
 ) -> frozenset[Constraint]:
-    """制約集合を高レベル重複判定用のキーへ変換する。"""
+    """制約集合のキーを返す。"""
     return frozenset(constraints)
 
 
 def build_path_signature(
     paths: Dict[int, Path],
 ) -> tuple:
-    """経路集合を高レベル重複判定用の署名へ変換する。"""
+    """経路集合の重複判定用署名を返す。"""
     robot_signatures = []
     for robot_id in sorted(paths.keys()):
         path = paths[robot_id]
@@ -340,8 +380,25 @@ def cbs_plan(
     env: PlanningEnvironment,
     max_time: int,
     debug: bool = False,
+    max_wallclock_sec: float | None = None,
+    max_high_level_expansions: int | None = None,
 ) -> Optional[Dict[int, Path]]:
-    """姿勢付きCBSで複数ロボット経路を計画する。"""
+    """姿勢付き CBS で複数ロボット経路を計画する。
+
+    Args:
+        starts: ロボットID -> (開始ノード, 開始姿勢)。
+        goals: ロボットID -> (目標ノード, 目標姿勢)。
+        env: 計画環境。
+        max_time: 低レベル探索の時間展開上限。
+        debug: デバッグ出力有効化フラグ。
+        max_wallclock_sec: CBS 全体の wall clock timeout [sec]。
+        max_high_level_expansions: 高レベル展開数上限。
+
+    Returns:
+        解が見つかればロボットID -> Path、失敗なら None。
+    """
+    wallclock_start = time.perf_counter()
+
     root_constraints: Set[Constraint] = set()
     root_paths: Dict[int, Path] = {}
 
@@ -402,6 +459,29 @@ def cbs_plan(
     bypass_count = 0
 
     while open_heap:
+        elapsed = time.perf_counter() - wallclock_start
+        if max_wallclock_sec is not None and elapsed > max_wallclock_sec:
+            if debug:
+                print(
+                    "[CBS] Timeout"
+                    f" elapsed={elapsed:.6f}s"
+                    f" max_wallclock_sec={max_wallclock_sec}"
+                    f" hl_expanded={expanded_high_level}"
+                )
+            return None
+
+        if (
+            max_high_level_expansions is not None
+            and expanded_high_level >= max_high_level_expansions
+        ):
+            if debug:
+                print(
+                    "[CBS] Expansion limit reached"
+                    f" hl_expanded={expanded_high_level}"
+                    f" max_high_level_expansions={max_high_level_expansions}"
+                )
+            return None
+
         queue_item = heapq.heappop(open_heap)
         current_node = node_store[queue_item.node_id]
         expanded_high_level += 1
@@ -418,6 +498,7 @@ def cbs_plan(
                 f" dup_branch_skip={duplicate_branch_skip}"
                 f" dup_path_skip={duplicate_path_skip}"
                 f" bypass={bypass_count}"
+                f" elapsed={elapsed:.6f}s"
             )
 
         conflict = detect_first_conflict(
@@ -430,6 +511,7 @@ def cbs_plan(
                     "[CBS] Solution found"
                     f" hl_expanded={expanded_high_level}"
                     f" total_cost={current_node.total_cost}"
+                    f" elapsed={elapsed:.6f}s"
                     f" dup_child_skip={duplicate_high_level_skip}"
                     f" dup_branch_skip={duplicate_branch_skip}"
                     f" dup_path_skip={duplicate_path_skip}"
@@ -452,6 +534,16 @@ def cbs_plan(
         bypass_path_signature: Optional[tuple] = None
 
         for new_constraint in branch_constraints:
+            elapsed = time.perf_counter() - wallclock_start
+            if max_wallclock_sec is not None and elapsed > max_wallclock_sec:
+                if debug:
+                    print(
+                        "[CBS] Timeout أثناء branching"
+                        f" elapsed={elapsed:.6f}s"
+                        f" max_wallclock_sec={max_wallclock_sec}"
+                    )
+                return None
+
             if debug:
                 print(
                     "[CBS] Branch"
@@ -551,6 +643,7 @@ def cbs_plan(
                     print(
                         "[CBS] Solution found in child"
                         f" total_cost={child.total_cost}"
+                        f" elapsed={elapsed:.6f}s"
                     )
                 return child.paths
 
@@ -603,9 +696,11 @@ def cbs_plan(
             next_node_id += 1
 
     if debug:
+        elapsed = time.perf_counter() - wallclock_start
         print(
             "[CBS] Failed: open list exhausted"
             f" hl_expanded={expanded_high_level}"
+            f" elapsed={elapsed:.6f}s"
             f" dup_child_skip={duplicate_high_level_skip}"
             f" dup_branch_skip={duplicate_branch_skip}"
             f" dup_path_skip={duplicate_path_skip}"
