@@ -16,27 +16,27 @@ from benchmark_common import (
 )
 from lacam_adapter import build_lacam_problem, run_single_case_lacam_result
 from lacam_runner import LaCAMBackend, run_lacam
-from orientation_lacam_backend import OrientationLaCAMBackend
+from orientation_lacam_backend_v2 import OrientationLaCAMBackendV2
+from orientation_lacam_backend_v3 import OrientationLaCAMBackendV3
 
 
 RESULT_DIR = Path("MAPF/results/phase2")
 PHASE1_SPEC_PATH = Path("MAPF/results/phase1/benchmark_spec.json")
 
-PLANNER_NAME = "OrientationLaCAM"
+PLANNER_NAME = "OrientationLaCAMV3"
 TIME_LIMIT_SEC = 30.0
 DEBUG = False
 
 
 def build_lacam_backend() -> LaCAMBackend:
-    """LaCAM backend を構築する。
-
-    Returns:
-        実 backend。
-    """
-    return OrientationLaCAMBackend(
-        max_high_level_expansions=10_000,
+    """LaCAM backend を構築する。"""
+    return OrientationLaCAMBackendV3(
+        max_high_level_expansions=20_000,
         max_depth=128,
         max_branch_children=8,
+        max_single_agent_candidates=6,
+        max_joint_successors=6,
+        pair_priority_successors_per_pattern=2,
     )
 
 
@@ -124,7 +124,7 @@ def main() -> None:
 
     all_results: list[BenchmarkResult] = []
 
-    print("=== Phase 2 benchmark (OrientationLaCAM) start ===")
+    print("=== Phase 2 benchmark (OrientationLaCAMV3) start ===")
     print(f"Loaded benchmark spec: {PHASE1_SPEC_PATH.resolve()}")
 
     for case in cases:
@@ -152,34 +152,34 @@ def main() -> None:
     csv_rows = build_csv_rows(all_results)
 
     save_json(
-        RESULT_DIR / "orientation_lacam_latest.json",
+        RESULT_DIR / "orientation_lacam_v3_latest.json",
         result_payload,
     )
     save_csv(
-        RESULT_DIR / "orientation_lacam_latest.csv",
+        RESULT_DIR / "orientation_lacam_v3_latest.csv",
         csv_rows,
     )
     save_markdown_summary(
-        RESULT_DIR / "orientation_lacam_latest.md",
+        RESULT_DIR / "orientation_lacam_v3_latest.md",
         cases=cases,
         results=all_results,
     )
 
     save_json(
-        RESULT_DIR / f"orientation_lacam_{timestamp}.json",
+        RESULT_DIR / f"orientation_lacam_v3_{timestamp}.json",
         result_payload,
     )
     save_csv(
-        RESULT_DIR / f"orientation_lacam_{timestamp}.csv",
+        RESULT_DIR / f"orientation_lacam_v3_{timestamp}.csv",
         csv_rows,
     )
     save_markdown_summary(
-        RESULT_DIR / f"orientation_lacam_{timestamp}.md",
+        RESULT_DIR / f"orientation_lacam_v3_{timestamp}.md",
         cases=cases,
         results=all_results,
     )
 
-    print("=== Phase 2 benchmark (OrientationLaCAM) finished ===")
+    print("=== Phase 2 benchmark (OrientationLaCAMV3) finished ===")
     print(f"Saved to: {RESULT_DIR.resolve()}")
 
 
