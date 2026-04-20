@@ -10,13 +10,7 @@ from lacam_runner import LaCAMBackend, LaCAMRunnerConfig
 
 @dataclass(frozen=True)
 class ReservationTable:
-    """固定済みロボット群から作る予約表。
-
-    Attributes:
-        state_reservations: 時刻 -> occupied fine cell 集合リスト。
-        transition_reservations: 時刻 -> occupied envelope 集合リスト。
-        final_time_by_agent: ロボットごとの終端時刻。
-    """
+    """固定済みロボット群から作る予約表。"""
 
     state_reservations: Dict[int, List[FrozenSet[tuple[int, int]]]]
     transition_reservations: Dict[int, List[FrozenSet[tuple[int, int]]]]
@@ -35,17 +29,7 @@ class SearchNode:
 
 @dataclass(frozen=True)
 class RepairCandidate:
-    """repair 候補。
-
-    Attributes:
-        paths_by_agent: 候補経路群。
-        repaired_agents: 再計画したロボットID列。
-        num_conflicts: 候補に残る競合数。
-        makespan: makespan。
-        sum_of_costs: cost 総和。
-        score: 総合スコア。
-        notes: 補助説明。
-    """
+    """repair / 初期解候補。"""
 
     paths_by_agent: Dict[int, List[int]]
     repaired_agents: Tuple[int, ...]
@@ -57,12 +41,7 @@ class RepairCandidate:
 
 
 class PythonOrientationLaCAMBackend(LaCAMBackend):
-    """`OrientationGraph` を直接使う改修版 backend。
-
-    注意:
-        これは LaCAM* の完全再現ではなく、
-        Phase 2 比較のための姿勢付き backend 実装である。
-    """
+    """`OrientationGraph` を直接使う改修版 backend。"""
 
     def __init__(
         self,
@@ -77,6 +56,12 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         """
         self.max_repair_iterations = max_repair_iterations
         self.max_time_expansion = max_time_expansion
+
+        # soft reservation penalty
+        self.state_overlap_penalty = 50.0
+        self.transition_overlap_penalty = 30.0
+        self.goal_hold_overlap_penalty = 100.0
+        self.initial_delay_weight = 0.5
 
     def solve(
         self,
@@ -113,7 +98,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
                     comp_time_sec=0.0,
                     paths_by_agent=paths,
                     raw_status="solved",
-                    notes="python_orientation_lacam_step2",
+                    notes="python_orientation_lacam_step4",
                 )
 
             robot_i, robot_j = conflict
@@ -148,24 +133,248 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
             ),
         )
 
+    # ------------------------------------------------------------------
+    # Initial solution generation
+    # ------------------------------------------------------------------
+
     def _build_initial_solution(
         self,
         problem: LaCAMProblem,
     ) -> Optional[Dict[int, List[int]]]:
-        """各ロボットを独立に解いて初期解を作る。"""
-        paths: Dict[int, List[int]] = {}
+        """複数 order と soft reservation を用いて初期解を構築する。"""
+        orders = self._generate_initial_orders(problem)
+        all_candidates: List[RepairCandidate] = []
 
-        for robot_id in sorted(problem.start_state_ids.keys()):
-            path = self._plan_single_agent_path(
+        for order in orders:
+            candidates = self._build_initial_solution_for_order_and_delay(
                 problem=problem,
-                robot_id=robot_id,
-                fixed_paths={},
+                planning_order=order,
             )
-            if path is None:
-                return None
-            paths[robot_id] = path
+            all_candidates.extend(candidates)
 
-        return paths
+        return self._select_best_initial_solution(all_candidates)
+
+    def _generate_initial_orders(
+        self,
+        problem: LaCAMProblem,
+    ) -> List[Tuple[int, ...]]:
+        """初期解生成用の planning order 候補を返す。"""
+        robot_ids = sorted(problem.start_state_ids.keys())
+        if not robot_ids:
+            return []
+
+        orders: List[Tuple[int, ...]] = []
+
+        # 1. robot_id 昇順
+        orders.append(tuple(robot_ids))
+
+        # 2. robot_id 降順
+        orders.append(tuple(reversed(robot_ids)))
+
+        # 3. 距離長い順
+        orders.append(
+            tuple(
+                sorted(
+                    robot_ids,
+                    key=lambda rid: -self._estimate_distance(problem, rid),
+                )
+            )
+        )
+
+        # 4. ボトルネック圧高い順
+        orders.append(
+            tuple(
+                sorted(
+                    robot_ids,
+                    key=lambda rid: -self._estimate_bottleneck_pressure(
+                        problem, rid
+                    ),
+                )
+            )
+        )
+
+        # 5. (ボトルネック圧, 距離) lexicographic
+        orders.append(
+            tuple(
+                sorted(
+                    robot_ids,
+                    key=lambda rid: (
+                        -self._estimate_bottleneck_pressure(problem, rid),
+                        -self._estimate_distance(problem, rid),
+                    ),
+                )
+            )
+        )
+
+        # 重複除去
+        unique_orders: List[Tuple[int, ...]] = []
+        seen = set()
+        for order in orders:
+            if order not in seen:
+                seen.add(order)
+                unique_orders.append(order)
+
+        return unique_orders
+
+    def _generate_initial_delay_candidates(
+        self,
+        problem: LaCAMProblem,
+        robot_id: int,
+    ) -> Tuple[int, ...]:
+        """各 robot に対する初期遅延候補を返す。"""
+        return (0, 1, 2, 3)
+
+    def _build_initial_solution_for_order_and_delay(
+        self,
+        problem: LaCAMProblem,
+        planning_order: Tuple[int, ...],
+    ) -> List[RepairCandidate]:
+        """1つの planning order に対して soft reservation 初期解を構築する。"""
+        paths: Dict[int, List[int]] = {}
+        delay_map: Dict[int, int] = {}
+
+        for robot_id in planning_order:
+            best_local_path: Optional[List[int]] = None
+            best_local_delay: Optional[int] = None
+            best_local_score = float("inf")
+
+            for delay in self._generate_initial_delay_candidates(problem, robot_id):
+                candidate_path = self._plan_single_agent_path_soft_reservation(
+                    problem=problem,
+                    robot_id=robot_id,
+                    fixed_paths=paths,
+                    initial_delay=delay,
+                )
+                if candidate_path is None:
+                    continue
+
+                temp_paths = dict(paths)
+                temp_paths[robot_id] = candidate_path
+                temp_delay_map = dict(delay_map)
+                temp_delay_map[robot_id] = delay
+
+                candidate = self._evaluate_initial_solution_candidate(
+                    problem=problem,
+                    paths_by_agent=temp_paths,
+                    planning_order=planning_order,
+                    delay_map=temp_delay_map,
+                )
+                if candidate.score < best_local_score:
+                    best_local_score = candidate.score
+                    best_local_path = candidate_path
+                    best_local_delay = delay
+
+            if best_local_path is None or best_local_delay is None:
+                return []
+
+            paths[robot_id] = best_local_path
+            delay_map[robot_id] = best_local_delay
+
+        final_candidate = self._evaluate_initial_solution_candidate(
+            problem=problem,
+            paths_by_agent=paths,
+            planning_order=planning_order,
+            delay_map=delay_map,
+        )
+        return [final_candidate]
+
+    def _estimate_distance(
+        self,
+        problem: LaCAMProblem,
+        robot_id: int,
+    ) -> float:
+        """開始状態と目標状態の粗い距離推定を返す。"""
+        graph = problem.graph
+        start_state = graph.id_to_state(problem.start_state_ids[robot_id])
+        goal_state = graph.id_to_state(problem.goal_state_ids[robot_id])
+
+        manhattan = abs(start_state.row - goal_state.row) + abs(
+            start_state.col - goal_state.col
+        )
+        rotate_penalty = 0.0 if start_state.mode_deg == goal_state.mode_deg else 1.0
+        return float(manhattan) + rotate_penalty
+
+    def _estimate_bottleneck_pressure(
+        self,
+        problem: LaCAMProblem,
+        robot_id: int,
+    ) -> float:
+        """ボトルネック圧の簡易推定を返す。"""
+        graph = problem.graph
+        start_state = graph.id_to_state(problem.start_state_ids[robot_id])
+        goal_state = graph.id_to_state(problem.goal_state_ids[robot_id])
+
+        center_row = (graph.num_rows - 1) / 2.0
+        center_col = (graph.num_cols - 1) / 2.0
+
+        start_dist = abs(start_state.row - center_row) + abs(
+            start_state.col - center_col
+        )
+        goal_dist = abs(goal_state.row - center_row) + abs(
+            goal_state.col - center_col
+        )
+        path_span = abs(start_state.row - goal_state.row) + abs(
+            start_state.col - goal_state.col
+        )
+
+        return float(path_span) - 0.5 * float(start_dist + goal_dist)
+
+    def _evaluate_initial_solution_candidate(
+        self,
+        problem: LaCAMProblem,
+        paths_by_agent: Dict[int, List[int]],
+        planning_order: Tuple[int, ...],
+        delay_map: Dict[int, int],
+    ) -> RepairCandidate:
+        """初期解候補を評価する。"""
+        num_conflicts = self._count_conflicts(
+            problem=problem,
+            paths_by_agent=paths_by_agent,
+        )
+        makespan, sum_of_costs = self._compute_path_metrics(
+            problem=problem,
+            paths_by_agent=paths_by_agent,
+        )
+        total_initial_delay = sum(delay_map.values())
+        score = (
+            1000.0 * num_conflicts
+            + 10.0 * makespan
+            + 1.0 * sum_of_costs
+            + self.initial_delay_weight * total_initial_delay
+        )
+
+        return RepairCandidate(
+            paths_by_agent=paths_by_agent,
+            repaired_agents=planning_order,
+            num_conflicts=num_conflicts,
+            makespan=makespan,
+            sum_of_costs=sum_of_costs,
+            score=score,
+            notes=f"initial_order={planning_order}, delay_map={delay_map}",
+        )
+
+    def _select_best_initial_solution(
+        self,
+        candidates: List[RepairCandidate],
+    ) -> Optional[Dict[int, List[int]]]:
+        """最良の初期解候補を選ぶ。"""
+        if not candidates:
+            return None
+
+        best = min(
+            candidates,
+            key=lambda c: (
+                c.score,
+                c.num_conflicts,
+                c.makespan,
+                c.sum_of_costs,
+            ),
+        )
+        return best.paths_by_agent
+
+    # ------------------------------------------------------------------
+    # Single agent planning
+    # ------------------------------------------------------------------
 
     def _plan_single_agent_path(
         self,
@@ -173,7 +382,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         robot_id: int,
         fixed_paths: Dict[int, List[int]],
     ) -> Optional[List[int]]:
-        """単一ロボットの時間拡張A*を実行する。"""
+        """hard reservation を使う単一ロボット時間拡張A*。"""
         reservation = self._build_reservation_table(
             problem=problem,
             fixed_paths=fixed_paths,
@@ -271,6 +480,150 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
             parents=parents,
         )
 
+    def _plan_single_agent_path_soft_reservation(
+        self,
+        problem: LaCAMProblem,
+        robot_id: int,
+        fixed_paths: Dict[int, List[int]],
+        initial_delay: int,
+    ) -> Optional[List[int]]:
+        """soft reservation + 初期遅延付き単一ロボット計画。"""
+        reservation = self._build_reservation_table(
+            problem=problem,
+            fixed_paths=fixed_paths,
+        )
+
+        graph = problem.graph
+        start_state_id = problem.start_state_ids[robot_id]
+        goal_state_id = problem.goal_state_ids[robot_id]
+
+        open_heap: List[SearchNode] = []
+        g_costs: Dict[Tuple[int, int], float] = {}
+        parents: Dict[Tuple[int, int], Tuple[int, int] | None] = {}
+
+        start_h = self._heuristic(
+            graph=graph,
+            state_id=start_state_id,
+            goal_state_id=goal_state_id,
+        )
+
+        start_key = (start_state_id, initial_delay)
+        g_costs[start_key] = 0.0
+        parents[start_key] = None
+        heapq.heappush(
+            open_heap,
+            SearchNode(
+                priority=start_h + self.initial_delay_weight * initial_delay,
+                g_cost=0.0,
+                state_id=start_state_id,
+                time_step=initial_delay,
+            ),
+        )
+
+        best_goal_key: Optional[Tuple[int, int]] = None
+
+        while open_heap:
+            current = heapq.heappop(open_heap)
+            current_key = (current.state_id, current.time_step)
+
+            if current.g_cost > g_costs.get(current_key, float("inf")):
+                continue
+
+            if graph.is_goal(current.state_id, goal_state_id):
+                best_goal_key = current_key
+                break
+
+            if current.time_step >= self.max_time_expansion:
+                continue
+
+            for next_state_id, edge in graph.neighbors(current.state_id):
+                next_time = current.time_step + 1
+                soft_penalty = self._compute_soft_reservation_penalty(
+                    problem=problem,
+                    src_state_id=current.state_id,
+                    dst_state_id=next_state_id,
+                    time_step=current.time_step,
+                    reservation=reservation,
+                )
+
+                next_g = current.g_cost + edge.cost + soft_penalty
+                next_key = (next_state_id, next_time)
+                if next_g >= g_costs.get(next_key, float("inf")):
+                    continue
+
+                g_costs[next_key] = next_g
+                parents[next_key] = current_key
+                h = self._heuristic(
+                    graph=graph,
+                    state_id=next_state_id,
+                    goal_state_id=goal_state_id,
+                )
+                heapq.heappush(
+                    open_heap,
+                    SearchNode(
+                        priority=next_g + h,
+                        g_cost=next_g,
+                        state_id=next_state_id,
+                        time_step=next_time,
+                    ),
+                )
+
+        if best_goal_key is None:
+            return None
+
+        path = self._reconstruct_path(
+            goal_key=best_goal_key,
+            parents=parents,
+        )
+
+        if initial_delay <= 0:
+            return path
+
+        delay_prefix = [start_state_id] * initial_delay
+        return delay_prefix + path
+
+    def _compute_soft_reservation_penalty(
+        self,
+        problem: LaCAMProblem,
+        src_state_id: int,
+        dst_state_id: int,
+        time_step: int,
+        reservation: ReservationTable,
+    ) -> float:
+        """soft reservation penalty を返す。"""
+        graph = problem.graph
+        src = graph.id_to_state(src_state_id)
+        dst = graph.id_to_state(dst_state_id)
+
+        src_node, src_mode = graph.oriented_state_to_internal(src)
+        dst_node, dst_mode = graph.oriented_state_to_internal(dst)
+
+        next_occ = graph.env.state_occupancy_key(dst_node, dst_mode)
+        transition_env = graph.env.transition_envelope(
+            from_node=src_node,
+            from_mode=src_mode,
+            to_node=dst_node,
+            to_mode=dst_mode,
+        )
+
+        penalty = 0.0
+
+        for reserved_occ in reservation.state_reservations.get(time_step + 1, []):
+            overlap_size = len(next_occ & reserved_occ)
+            if overlap_size > 0:
+                penalty += self.state_overlap_penalty * overlap_size
+
+        for reserved_env in reservation.transition_reservations.get(time_step, []):
+            overlap_size = len(transition_env & reserved_env)
+            if overlap_size > 0:
+                penalty += self.transition_overlap_penalty * overlap_size
+
+        return penalty
+
+    # ------------------------------------------------------------------
+    # Reservation handling
+    # ------------------------------------------------------------------
+
     def _build_reservation_table(
         self,
         problem: LaCAMProblem,
@@ -322,6 +675,10 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
             transition_reservations=trans_res,
             final_time_by_agent=final_time_by_agent,
         )
+
+    # ------------------------------------------------------------------
+    # Conflict detection / evaluation
+    # ------------------------------------------------------------------
 
     def _detect_first_conflict(
         self,
@@ -449,6 +806,10 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         sum_of_costs = sum(path.cost for path in robot_paths.values())
         return makespan, sum_of_costs
 
+    # ------------------------------------------------------------------
+    # Repair
+    # ------------------------------------------------------------------
+
     def _evaluate_repair_candidate(
         self,
         problem: LaCAMProblem,
@@ -456,7 +817,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         repaired_agents: Tuple[int, ...],
         notes: str,
     ) -> RepairCandidate:
-        """候補を評価して `RepairCandidate` を返す。"""
+        """repair 候補を評価する。"""
         num_conflicts = self._count_conflicts(
             problem=problem,
             paths_by_agent=paths_by_agent,
@@ -569,7 +930,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         self,
         candidates: List[RepairCandidate],
     ) -> Optional[RepairCandidate]:
-        """候補群の中から最良候補を返す。"""
+        """repair 候補群の中から最良候補を返す。"""
         if not candidates:
             return None
 
@@ -629,6 +990,10 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
 
         return None
 
+    # ------------------------------------------------------------------
+    # Low-level helper
+    # ------------------------------------------------------------------
+
     def _heuristic(
         self,
         graph,
@@ -659,7 +1024,7 @@ class PythonOrientationLaCAMBackend(LaCAMBackend):
         time_step: int,
         reservation: ReservationTable,
     ) -> bool:
-        """候補遷移が予約表と衝突するか判定する。"""
+        """hard reservation 判定。"""
         graph = problem.graph
         src = graph.id_to_state(src_state_id)
         dst = graph.id_to_state(dst_state_id)
