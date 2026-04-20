@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from benchmark_common import (
     BenchmarkCaseSpec,
@@ -14,16 +14,17 @@ from benchmark_common import (
     save_json,
     save_markdown_summary,
 )
-from lacam_adapter import (
-    build_lacam_problem,
-    run_single_case_lacam_result,
-)
-from lacam_backends import PythonOrientationLaCAMBackend
+from lacam_adapter import build_lacam_problem, run_single_case_lacam_result
 from lacam_runner import LaCAMBackend, run_lacam
+from orientation_lacam_backend import OrientationLaCAMBackend
 
 
 RESULT_DIR = Path("MAPF/results/phase2")
 PHASE1_SPEC_PATH = Path("MAPF/results/phase1/benchmark_spec.json")
+
+PLANNER_NAME = "OrientationLaCAM"
+TIME_LIMIT_SEC = 30.0
+DEBUG = False
 
 
 def build_lacam_backend() -> LaCAMBackend:
@@ -32,18 +33,19 @@ def build_lacam_backend() -> LaCAMBackend:
     Returns:
         実 backend。
     """
-    return PythonOrientationLaCAMBackend(
-        max_repair_iterations=100,
-        max_time_expansion=80,
+    return OrientationLaCAMBackend(
+        max_high_level_expansions=10_000,
+        max_depth=128,
+        max_branch_children=8,
     )
 
 
 def run_single_case(
     case: BenchmarkCaseSpec,
     enable_move_rotate: bool,
-    planner_name: str = "LaCAM",
-    debug: bool = False,
-    time_limit_sec: float | None = None,
+    planner_name: str = PLANNER_NAME,
+    debug: bool = DEBUG,
+    time_limit_sec: float | None = TIME_LIMIT_SEC,
 ) -> BenchmarkResult:
     """単一ケースを LaCAM backend で実行し、結果を返す。
 
@@ -118,12 +120,11 @@ def main() -> None:
         )
 
     cases = load_benchmark_spec(PHASE1_SPEC_PATH)
-    planner_name = "LaCAM"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     all_results: list[BenchmarkResult] = []
 
-    print("=== Phase 2 benchmark (LaCAM) start ===")
+    print("=== Phase 2 benchmark (OrientationLaCAM) start ===")
     print(f"Loaded benchmark spec: {PHASE1_SPEC_PATH.resolve()}")
 
     for case in cases:
@@ -131,9 +132,9 @@ def main() -> None:
             result = run_single_case(
                 case=case,
                 enable_move_rotate=enable_move_rotate,
-                planner_name=planner_name,
-                debug=False,
-                time_limit_sec=30.0,
+                planner_name=PLANNER_NAME,
+                debug=DEBUG,
+                time_limit_sec=TIME_LIMIT_SEC,
             )
             all_results.append(result)
 
@@ -150,37 +151,35 @@ def main() -> None:
     result_payload = build_result_payload(all_results)
     csv_rows = build_csv_rows(all_results)
 
-    # 最新版として保存
     save_json(
-        RESULT_DIR / "lacam_baseline_latest.json",
+        RESULT_DIR / "orientation_lacam_latest.json",
         result_payload,
     )
     save_csv(
-        RESULT_DIR / "lacam_baseline_latest.csv",
+        RESULT_DIR / "orientation_lacam_latest.csv",
         csv_rows,
     )
     save_markdown_summary(
-        RESULT_DIR / "lacam_baseline_latest.md",
+        RESULT_DIR / "orientation_lacam_latest.md",
         cases=cases,
         results=all_results,
     )
 
-    # タイムスタンプ付き保存
     save_json(
-        RESULT_DIR / f"lacam_baseline_{timestamp}.json",
+        RESULT_DIR / f"orientation_lacam_{timestamp}.json",
         result_payload,
     )
     save_csv(
-        RESULT_DIR / f"lacam_baseline_{timestamp}.csv",
+        RESULT_DIR / f"orientation_lacam_{timestamp}.csv",
         csv_rows,
     )
     save_markdown_summary(
-        RESULT_DIR / f"lacam_baseline_{timestamp}.md",
+        RESULT_DIR / f"orientation_lacam_{timestamp}.md",
         cases=cases,
         results=all_results,
     )
 
-    print("=== Phase 2 benchmark (LaCAM) finished ===")
+    print("=== Phase 2 benchmark (OrientationLaCAM) finished ===")
     print(f"Saved to: {RESULT_DIR.resolve()}")
 
 

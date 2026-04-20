@@ -1,0 +1,25 @@
+planner_name,case_id,case_name,purpose,tier,enable_move_rotate,success,planning_time_sec,num_robots,makespan,sum_of_costs,total_wait,total_move,total_rotate,total_move_rotate,notes,R0_cost,R0_num_states,R0_num_transitions,R0_wait,R0_move,R0_rotate,R0_move_rotate,R1_cost,R1_num_states,R1_num_transitions,R1_wait,R1_move,R1_rotate,R1_move_rotate
+OrientationLaCAM,case_01,Case 01: rotation only,回転単体確認,Tier 1: primitive sanity,False,False,0.0055813000071793795,1,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_01,Case 01: rotation only,回転単体確認,Tier 1: primitive sanity,True,False,0.03421569999773055,1,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_02,Case 02: move+rotate,move+rotate 単体効果,Tier 1: primitive sanity,False,True,0.005922399985138327,1,3.15,3.15,0,2,1,0,solved | orientation_lacam_v1,3.15,4,3,0,2,1,0,,,,,,,
+OrientationLaCAM,case_02,Case 02: move+rotate,move+rotate 単体効果,Tier 1: primitive sanity,True,True,0.03477810003096238,1,2.05,2.05,0,1,0,1,solved | orientation_lacam_v1,2.05,3,2,0,1,0,1,,,,,,,
+OrientationLaCAM,case_03,Case 03: two robot corridor,単純な2台対向協調,Tier 2: simple coordination,False,False,0.0059775999980047345,2,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_03,Case 03: two robot corridor,単純な2台対向協調,Tier 2: simple coordination,True,False,0.035830600012559444,2,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_04,Case 04: two robot with obstacle wall,障害物あり協調,Tier 3: obstacle helpful,False,True,0.008397999976295978,2,9.15,18.3,0,16,2,0,solved | orientation_lacam_v1,9.15,10,9,0,8,1,0,9.15,10,9,0,8,1,0
+OrientationLaCAM,case_04,Case 04: two robot with obstacle wall,障害物あり協調,Tier 3: obstacle helpful,True,False,0.038721100019756705,2,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_a,Case A: move+rotate helpful,move+rotate 有効例,Tier 3: obstacle helpful,False,True,0.006548500037752092,1,7.15,7.15,0,6,1,0,solved | orientation_lacam_v1,7.15,8,7,0,6,1,0,,,,,,,
+OrientationLaCAM,case_a,Case A: move+rotate helpful,move+rotate 有効例,Tier 3: obstacle helpful,True,True,0.036380200006533414,1,6.05,6.05,0,5,0,1,solved | orientation_lacam_v1,6.05,7,6,0,5,0,1,,,,,,,
+OrientationLaCAM,case_b,Case B: move+rotate likely unhelpful,move+rotate 不要例,Tier 2: simple coordination,False,True,0.007213900040369481,2,6.0,12.0,0,12,0,0,solved | orientation_lacam_v1,6.0,7,6,0,6,0,0,6.0,7,6,0,6,0,0
+OrientationLaCAM,case_b,Case B: move+rotate likely unhelpful,move+rotate 不要例,Tier 2: simple coordination,True,True,0.03764310001861304,2,6.0,12.0,0,12,0,0,solved | orientation_lacam_v1,6.0,7,6,0,6,0,0,6.0,7,6,0,6,0,0
+OrientationLaCAM,case_c,Case C: coordination sensitive,干渉が強い協調ケース,Tier 4: hard coordination,False,False,0.007257100020069629,2,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_c,Case C: coordination sensitive,干渉が強い協調ケース,Tier 4: hard coordination,True,False,0.039049999963026494,2,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_d,Case D: 3-agent single bottleneck,3台が単一ボトルネックを共有し、通過順序で品質差が出るケース,Tier 4: hard coordination,False,False,0.008279000001493841,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_d,Case D: 3-agent single bottleneck,3台が単一ボトルネックを共有し、通過順序で品質差が出るケース,Tier 4: hard coordination,True,False,0.040513700048904866,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_e,Case E: 4-agent cross intersection,4方向から中央へ同時進入する十字交差ケース,Tier 4: hard coordination,False,False,0.011315400013700128,4,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_e,Case E: 4-agent cross intersection,4方向から中央へ同時進入する十字交差ケース,Tier 4: hard coordination,True,False,0.06907480000518262,4,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_f,Case F: pocket evacuation,退避ポケットを使うか待機するかで差が出るケース,Tier 4: hard coordination,False,False,0.008831099956296384,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_f,Case F: pocket evacuation,退避ポケットを使うか待機するかで差が出るケース,Tier 4: hard coordination,True,False,0.045574799994938076,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_g,Case G: double bottleneck,2つの狭窄部をまたぐため局所最適に落ちやすいケース,Tier 4: hard coordination,False,False,0.01081130001693964,4,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_g,Case G: double bottleneck,2つの狭窄部をまたぐため局所最適に落ちやすいケース,Tier 4: hard coordination,True,False,0.05539139994652942,4,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_h,Case H: asymmetric orientation-critical,姿勢変更が本質的に効く非対称な強干渉ケース,Tier 4: hard coordination,False,False,0.009910699969623238,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
+OrientationLaCAM,case_h,Case H: asymmetric orientation-critical,姿勢変更が本質的に効く非対称な強干渉ケース,Tier 4: hard coordination,True,False,0.0389267000136897,3,,,,,,,search_failed | open list exhausted,,,,,,,,,,,,,,
